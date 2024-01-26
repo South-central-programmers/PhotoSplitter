@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h1>Добавьте новое мероприятие</h1>
+<form action="{% url 'add_event' %}" enctype="multipart/form-data" method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+   <p>
+       <input type="submit" value="Отправить">
+   </p>
+</form>
+</body>
+</html>
