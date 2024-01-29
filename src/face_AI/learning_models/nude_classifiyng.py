@@ -9,7 +9,7 @@ import copy
 from tqdm import tqdm
 
 def main():
-    device = torch.device("mps")
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     data_dir = 'data/nude_detection/nude_classification_images'
 
@@ -78,7 +78,6 @@ def main():
 
             for phase in ['train', 'val']:
                 if phase == 'train':
-                    scheduler.step()
                     model.train()
                 else:
                     model.eval()
@@ -100,31 +99,15 @@ def main():
                         if phase == 'train':
                             loss.backward()
                             optimizer.step()
-                            scheduler.step()
 
                     running_loss += loss.item() * inputs.size(0)
                     running_corrects += torch.sum(preds == labels.data)
 
-                if phase == "train":
-                    train_loss.append(running_loss/dataset_sizes[phase])
-                    train_acc.append(running_corrects.float() /
-                                    dataset_sizes[phase])
-                    epoch_counter_train.append(epoch)
-                if phase == "val":
-                    val_loss.append(running_loss / dataset_sizes[phase])
-                    val_acc.append(running_corrects.float() /
-                                dataset_sizes[phase])
-                    epoch_counter_val.append(epoch)
+                if phase == 'train':
+                    scheduler.step()
 
                 epoch_loss = running_loss / dataset_sizes[phase]
-                epoch_acc = running_corrects.float() / dataset_sizes[phase]
-
-                if phase == "train":
-                    epoch_loss = running_loss / dataset_sizes[phase]
-                    epoch_acc = running_corrects.float() / dataset_sizes[phase]
-                if phase == "val":
-                    epoch_loss = running_loss / dataset_sizes[phase]
-                    epoch_acc = running_corrects.float() / dataset_sizes[phase]
+                epoch_acc = running_corrects.double() / dataset_sizes[phase]
 
                 print('{} Loss: {:.4f} Acc: {:.4f}'.format(
                     phase, epoch_loss, epoch_acc))
@@ -132,6 +115,8 @@ def main():
                 if phase == 'val' and epoch_acc > best_acc:
                     best_acc = epoch_acc
                     best_model_wts = copy.deepcopy(model.state_dict())
+
+            print()
 
         time_elapsed = time.time() - since
         print('Training complete in {:.0f}m {:.0f}s'.format(
