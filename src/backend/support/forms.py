@@ -2,11 +2,18 @@ from django import forms
 from .models import Users, UsersIdentificationphotos, Events
 from django.contrib.auth.models import User
 
+class EventsSearchForm(forms.Form):
+    query = forms.TextInput()
+    def clean_query(self):
+        query = self.cleaned_data.get('query')
+        if not query:
+            raise forms.ValidationError('Введите поисковый запрос')
+        return query
+
 
 class UserRegistrationForm(forms.ModelForm):
     password = forms.CharField(label='Password', widget=forms.PasswordInput(attrs={'placeholder': 'Введите ваш пароль'}))
     password2 = forms.CharField(label='Repeat password', widget=forms.PasswordInput(attrs={'placeholder': 'Введите ваш пароль повторно'}))
-
     class Meta:
         model = User
         fields = ('username', 'first_name', 'email', 'last_name')

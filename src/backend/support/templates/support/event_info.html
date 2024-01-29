@@ -1,10 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
-</head>
-<body>
-$END$
-</body>
-</html>
+{% extends  'support/base.html'%}
+{% block title %} {{ event.name }} {% endblock %}
+{% block content %}
+    <p>{{ event.user }}</p>
+    <p>{{ event.description }}</p>
+{% endblock %}

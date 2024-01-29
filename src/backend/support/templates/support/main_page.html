@@ -1,10 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-
-</body>
-</html>
+{% extends  'support/base.html'%}
+{% block title %} Главная страница {% endblock %}
+{% block content %}
+    {% for el in meetings %}
+        <p><a href="{% url 'event_info' el.id %}">{{el.eventname}}</a></p>
+        <p>{{ el.description }}</p>
+        <p>{{ el.location }}</p>
+    {% endfor %}
+    {% for number in meetings.paginator.page_range %}
+        <li class="page-item"><a href="?meetings={{ query }}&page={{ number }}" class="page-link">{{ number }}</a></li>
+    {% endfor %}
+{% endblock %}

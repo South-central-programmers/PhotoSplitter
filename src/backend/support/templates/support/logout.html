@@ -1,12 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-<h2>Logout</h2>
-<p>Вы успешно вышли</p>
-<h1><a href="to_main">Вернуться на главную</a></h1>
-</body>
-</html>
+{% extends  'support/base.html'%}
+{% block title %} {% endblock %}
+{% block content %}
+    <h2>Logout</h2>
+    <p>Вы успешно вышли</p>
+    <h1><a href="to_main">Вернуться на главную</a></h1>
+{% endblock %}
