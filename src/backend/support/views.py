@@ -11,7 +11,7 @@ menu = [{'title': 'Домой', 'url_name': 'main'}, {'title': 'Регистра
 
 def main_page(request):
     #print(request.user.id)
-    meetings = Events.objects.all()#.filter(id__lte=3).order_by('id')     #get_queryset().order_by('id') #filter(id__lte=5).order_by('id')
+    meetings = Events.objects.all().order_by('-likes')#.filter(id__lte=3).order_by('id')     #get_queryset().order_by('id') #filter(id__lte=5).order_by('id')
     paginator = Paginator(meetings, 2)
     page_number =   request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -26,10 +26,10 @@ def main_page(request):
 
 def search_events_paginator(request):
     context = {}
-    meetings = Events.objects.all()
+    meetings = Events.objects.all().order_by('-likes')
     if request.method == 'GET':
         query = request.GET.get('meetings')
-        queryset = meetings.filter(eventname__icontains=query)
+        queryset = meetings.filter(eventname__icontains=query).order_by('-likes')
         page = request.GET.get('page')
         paginator = Paginator(queryset, 2)
         try:
