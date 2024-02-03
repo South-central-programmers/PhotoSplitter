@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.conf.urls.static import static
 from django.urls import path, include
 from django.conf import settings
-from support.views import index
+from support.views import main_page
 
 
 urlpatterns = [

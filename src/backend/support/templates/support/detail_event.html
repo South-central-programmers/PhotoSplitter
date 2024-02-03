@@ -1,0 +1,13 @@
+{% extends  'support/base.html'%}
+{% block title %} {% endblock %}
+{% block content %}
+<p>{{ this_event.eventname }}</p>
+<p>{{ this_event.description }}</p>
+<p>{{ this_event.eventdate }}</p>
+<p>{{ this_event.location }}</p>
+{% for photo in all_photos %}
+    <img src="{{ photo }}" alt="No photo" width="350" class="mr-3">
+{% endfor %}
+<p>{{ this_event.likes }}</p>
+<h3><a href="{% url 'download_all_zip' this_event.id %}">Скачать архив с фото в zip</a></h3>
+{% endblock %}
