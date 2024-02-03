@@ -245,7 +245,7 @@ def main():
             criterion,
             optimizer_ft,
             exp_lr_scheduler,
-            num_epochs=1,
+            num_epochs=20,
             dataloaders=dataloaders,
             dataset_sizes=dataset_sizes,
             device=device,
