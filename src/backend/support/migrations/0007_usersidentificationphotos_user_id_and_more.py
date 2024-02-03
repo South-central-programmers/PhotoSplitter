@@ -4,20 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('support', '0006_usersidentificationphotos_userssavedarchives_and_more'),
+        ("support", "0006_usersidentificationphotos_userssavedarchives_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='usersidentificationphotos',
-            name='user_id',
+            model_name="usersidentificationphotos",
+            name="user_id",
             field=models.IntegerField(default=None),
         ),
         migrations.AddField(
-            model_name='userssavedarchives',
-            name='user_id',
+            model_name="userssavedarchives",
+            name="user_id",
             field=models.IntegerField(default=None),
         ),
     ]

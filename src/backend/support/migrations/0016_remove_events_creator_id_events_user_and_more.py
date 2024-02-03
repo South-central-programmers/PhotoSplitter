@@ -7,45 +7,52 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('support', '0015_alter_usersidentificationphotos_user'),
+        ("support", "0015_alter_usersidentificationphotos_user"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='events',
-            name='creator_id',
+            model_name="events",
+            name="creator_id",
         ),
         migrations.AddField(
-            model_name='events',
-            name='user',
-            field=models.ForeignKey(default=None, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
+            model_name="events",
+            name="user",
+            field=models.ForeignKey(
+                default=None,
+                on_delete=django.db.models.deletion.CASCADE,
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AddField(
-            model_name='userssavedarchives',
-            name='user',
-            field=models.ForeignKey(default=None, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
+            model_name="userssavedarchives",
+            name="user",
+            field=models.ForeignKey(
+                default=None,
+                on_delete=django.db.models.deletion.CASCADE,
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AlterField(
-            model_name='events',
-            name='eventdate',
+            model_name="events",
+            name="eventdate",
             field=models.DateField(max_length=30),
         ),
         migrations.AlterField(
-            model_name='events',
-            name='file_archive',
+            model_name="events",
+            name="file_archive",
             field=models.FileField(upload_to=support.models.events_path),
         ),
         migrations.AlterField(
-            model_name='events',
-            name='likes',
+            model_name="events",
+            name="likes",
             field=models.IntegerField(default=0),
         ),
         migrations.AlterField(
-            model_name='events',
-            name='location',
+            model_name="events",
+            name="location",
             field=models.CharField(max_length=150),
         ),
     ]
