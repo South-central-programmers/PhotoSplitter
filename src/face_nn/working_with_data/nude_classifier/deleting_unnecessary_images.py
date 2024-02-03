@@ -30,10 +30,10 @@ def remove_anime_images(directory):
                 file_path = os.path.join(root, file)
                 try:
                     if is_anime(file_path):
-                        print(f"Удаление {file_path}")
+                        print(f"Deleting {file_path}")
                         os.remove(file_path)
                 except Exception as e:
-                    print(f"Ошибка при обработке файла {file_path}: {e}")
+                    print(f"Error while deleting {file_path}: {e}")
 
 
 directories = [

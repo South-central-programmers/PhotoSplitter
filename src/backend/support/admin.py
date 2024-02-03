@@ -9,14 +9,15 @@ from .models import Users, Events, EventParticipation
 class UsersInline(admin.StackedInline):
     model = Users
     can_delete = False
-    verbose_name = "Users"
+    verbose_name = 'Users'
 
 
 class CustomizedUsers(UserAdmin):
-    inlines = (UsersInline,)
+    inlines = (UsersInline, )
 
 
 admin.site.unregister(User)
 admin.site.register(User, CustomizedUsers)
 admin.site.register(Events)
 admin.site.register(EventParticipation)
+

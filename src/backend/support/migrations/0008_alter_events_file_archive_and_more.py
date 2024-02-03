@@ -5,26 +5,25 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("support", "0007_usersidentificationphotos_user_id_and_more"),
+        ('support', '0007_usersidentificationphotos_user_id_and_more'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="events",
-            name="file_archive",
-            field=models.FileField(upload_to="upload_event_files"),
+            model_name='events',
+            name='file_archive',
+            field=models.FileField(upload_to='upload_event_files'),
         ),
         migrations.AlterField(
-            model_name="usersidentificationphotos",
-            name="identification_photo_archive",
-            field=models.FileField(
-                upload_to=support.models.users_identification_photos_path
-            ),
+            model_name='usersidentificationphotos',
+            name='identification_photo_archive',
+            field=models.FileField(upload_to=support.models.users_identification_photos_path),
         ),
         migrations.AlterField(
-            model_name="userssavedarchives",
-            name="saved_file_archive",
-            field=models.FileField(upload_to="upload_user_files"),
+            model_name='userssavedarchives',
+            name='saved_file_archive',
+            field=models.FileField(upload_to='upload_user_files'),
         ),
     ]

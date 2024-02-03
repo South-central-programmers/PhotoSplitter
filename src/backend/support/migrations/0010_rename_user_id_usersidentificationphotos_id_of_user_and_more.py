@@ -6,33 +6,30 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("support", "0009_usersidentificationphotos_us"),
+        ('support', '0009_usersidentificationphotos_us'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name="usersidentificationphotos",
-            old_name="user_id",
-            new_name="id_of_user",
+            model_name='usersidentificationphotos',
+            old_name='user_id',
+            new_name='id_of_user',
         ),
         migrations.RenameField(
-            model_name="userssavedarchives",
-            old_name="user_id",
-            new_name="id_of_user",
+            model_name='userssavedarchives',
+            old_name='user_id',
+            new_name='id_of_user',
         ),
         migrations.RemoveField(
-            model_name="usersidentificationphotos",
-            name="us",
+            model_name='usersidentificationphotos',
+            name='us',
         ),
         migrations.AddField(
-            model_name="usersidentificationphotos",
-            name="user",
-            field=models.ForeignKey(
-                default=None,
-                on_delete=django.db.models.deletion.CASCADE,
-                to=settings.AUTH_USER_MODEL,
-            ),
+            model_name='usersidentificationphotos',
+            name='user',
+            field=models.ForeignKey(default=None, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
         ),
     ]

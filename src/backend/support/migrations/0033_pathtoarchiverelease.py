@@ -4,25 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("support", "0032_alter_events_file_archive"),
+        ('support', '0032_alter_events_file_archive'),
     ]
 
     operations = [
         migrations.CreateModel(
-            name="PathToArchiveRelease",
+            name='PathToArchiveRelease',
             fields=[
-                (
-                    "id",
-                    models.BigAutoField(
-                        auto_created=True,
-                        primary_key=True,
-                        serialize=False,
-                        verbose_name="ID",
-                    ),
-                ),
-                ("path_to_release_archive", models.FileField(upload_to="")),
-                ("event_id", models.IntegerField()),
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('path_to_release_archive', models.FileField(upload_to='')),
+                ('event_id', models.IntegerField()),
             ],
         ),
     ]

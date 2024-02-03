@@ -14,7 +14,7 @@ model = YOLO(
 
 def process_images(folder):
     for root, dirs, files in os.walk(folder):
-        for file in tqdm(files, desc=f"Обработка папки {root}"):
+        for file in tqdm(files, desc=f"Checking folder {root}"):
             if file.lower().endswith((".png", ".jpg", ".jpeg")):
                 image_path = os.path.join(root, file)
                 image = Image.open(image_path)

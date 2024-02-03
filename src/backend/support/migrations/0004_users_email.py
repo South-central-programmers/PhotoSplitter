@@ -4,14 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("support", "0003_remove_users_datejoined_remove_users_email_and_more"),
+        ('support', '0003_remove_users_datejoined_remove_users_email_and_more'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="users",
-            name="email",
+            model_name='users',
+            name='email',
             field=models.EmailField(default=None, max_length=50, unique=True),
         ),
     ]

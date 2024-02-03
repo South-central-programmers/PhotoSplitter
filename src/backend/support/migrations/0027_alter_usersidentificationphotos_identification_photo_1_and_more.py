@@ -5,30 +5,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        (
-            "support",
-            "0026_remove_usersidentificationphotos_identification_photo_archive_and_more",
-        ),
+        ('support', '0026_remove_usersidentificationphotos_identification_photo_archive_and_more'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="usersidentificationphotos",
-            name="identification_photo_1",
-            field=models.ImageField(
-                blank=True,
-                default=None,
-                upload_to=support.models.users_identification_photos_path,
-            ),
+            model_name='usersidentificationphotos',
+            name='identification_photo_1',
+            field=models.ImageField(blank=True, default=None, upload_to=support.models.users_identification_photos_path),
         ),
         migrations.AlterField(
-            model_name="usersidentificationphotos",
-            name="identification_photo_2",
-            field=models.ImageField(
-                blank=True,
-                default=None,
-                upload_to=support.models.users_identification_photos_path,
-            ),
+            model_name='usersidentificationphotos',
+            name='identification_photo_2',
+            field=models.ImageField(blank=True, default=None, upload_to=support.models.users_identification_photos_path),
         ),
     ]

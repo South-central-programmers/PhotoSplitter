@@ -6,19 +6,16 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("support", "0011_remove_usersidentificationphotos_id_of_user_and_more"),
+        ('support', '0011_remove_usersidentificationphotos_id_of_user_and_more'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="usersidentificationphotos",
-            name="user",
-            field=models.ForeignKey(
-                default=None,
-                on_delete=django.db.models.deletion.SET_DEFAULT,
-                to=settings.AUTH_USER_MODEL,
-            ),
+            model_name='usersidentificationphotos',
+            name='user',
+            field=models.ForeignKey(default=None, on_delete=django.db.models.deletion.SET_DEFAULT, to=settings.AUTH_USER_MODEL),
         ),
     ]
