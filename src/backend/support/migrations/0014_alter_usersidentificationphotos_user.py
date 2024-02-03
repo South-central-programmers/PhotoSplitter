@@ -5,15 +5,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('support', '0013_alter_usersidentificationphotos_user'),
+        ("support", "0013_alter_usersidentificationphotos_user"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='usersidentificationphotos',
-            name='user',
-            field=models.ForeignKey(default=None, on_delete=django.db.models.deletion.CASCADE, to='support.users'),
+            model_name="usersidentificationphotos",
+            name="user",
+            field=models.ForeignKey(
+                default=None,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="support.users",
+            ),
         ),
     ]

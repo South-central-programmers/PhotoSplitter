@@ -5,18 +5,22 @@ from tqdm import tqdm
 from random import sample
 import random
 
+
 def reorganize_images(source_dirs, dest_dir):
     if not os.path.exists(dest_dir):
         os.makedirs(dest_dir)
 
     for source_dir in source_dirs:
-        for person_id in tqdm(os.listdir(source_dir), desc=f'Processing {source_dir}'):
+        for person_id in tqdm(os.listdir(source_dir), desc=f"Processing {source_dir}"):
             person_dir = os.path.join(source_dir, person_id)
             if os.path.isdir(person_dir):
                 for image_name in os.listdir(person_dir):
                     source_image_path = os.path.join(person_dir, image_name)
-                    dest_image_path = os.path.join(dest_dir, person_id + '_' + image_name)
+                    dest_image_path = os.path.join(
+                        dest_dir, person_id + "_" + image_name
+                    )
                     shutil.copy(source_image_path, dest_image_path)
+
 
 def create_pairs(images, max_pairs_per_person=200):
     positive_pairs = []
@@ -25,12 +29,14 @@ def create_pairs(images, max_pairs_per_person=200):
     person_to_images = {}
 
     for img in images:
-        person_id = img.split('_')[0]
+        person_id = img.split("_")[0]
         if person_id not in person_to_images:
             person_to_images[person_id] = []
         person_to_images[person_id].append(img)
 
-    for person_id, imgs in tqdm(person_to_images.items(), desc="Creating positive pairs"):
+    for person_id, imgs in tqdm(
+        person_to_images.items(), desc="Creating positive pairs"
+    ):
         if len(imgs) > 1:
             for _ in range(min(max_pairs_per_person, len(imgs))):
                 pair = random.sample(imgs, 2)
@@ -54,8 +60,9 @@ def create_pairs(images, max_pairs_per_person=200):
 
     return list(pairs), list(labels)
 
-source_dirs = ['data/face_similarity/train', 'data/face_similarity/val']
-dest_dir = 'data/rebuilded_face_similarity_data/images'
+
+source_dirs = ["data/face_similarity/train", "data/face_similarity/val"]
+dest_dir = "data/rebuilded_face_similarity_data/images"
 
 reorganize_images(source_dirs, dest_dir)
 
@@ -71,10 +78,10 @@ split_index = int(len(pairs) * 0.8)
 train_pairs, train_labels = pairs[:split_index], labels[:split_index]
 val_pairs, val_labels = pairs[split_index:], labels[split_index:]
 
-train_df = pd.DataFrame(train_pairs, columns=['image1', 'image2'])
-train_df['label'] = train_labels
-train_df.to_csv('data/rebuilded_face_similarity_data/train_pairs.csv', index=False)
+train_df = pd.DataFrame(train_pairs, columns=["image1", "image2"])
+train_df["label"] = train_labels
+train_df.to_csv("data/rebuilded_face_similarity_data/train_pairs.csv", index=False)
 
-val_df = pd.DataFrame(val_pairs, columns=['image1', 'image2'])
-val_df['label'] = val_labels
-val_df.to_csv('data/rebuilded_face_similarity_data/val_pairs.csv', index=False)
+val_df = pd.DataFrame(val_pairs, columns=["image1", "image2"])
+val_df["label"] = val_labels
+val_df.to_csv("data/rebuilded_face_similarity_data/val_pairs.csv", index=False)

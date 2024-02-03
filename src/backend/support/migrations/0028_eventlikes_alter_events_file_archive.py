@@ -6,23 +6,41 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('support', '0027_alter_usersidentificationphotos_identification_photo_1_and_more'),
+        (
+            "support",
+            "0027_alter_usersidentificationphotos_identification_photo_1_and_more",
+        ),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='EventLikes',
+            name="EventLikes",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('event_id', models.IntegerField()),
-                ('user_id', models.IntegerField()),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("event_id", models.IntegerField()),
+                ("user_id", models.IntegerField()),
             ],
         ),
         migrations.AlterField(
-            model_name='events',
-            name='file_archive',
-            field=models.FileField(unique=True, upload_to=support.models.events_path, validators=[django.core.validators.FileExtensionValidator(allowed_extensions=['zip', 'rar'])]),
+            model_name="events",
+            name="file_archive",
+            field=models.FileField(
+                unique=True,
+                upload_to=support.models.events_path,
+                validators=[
+                    django.core.validators.FileExtensionValidator(
+                        allowed_extensions=["zip", "rar"]
+                    )
+                ],
+            ),
         ),
     ]

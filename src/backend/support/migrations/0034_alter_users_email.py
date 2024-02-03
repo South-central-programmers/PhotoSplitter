@@ -5,15 +5,21 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('support', '0033_pathtoarchiverelease'),
+        ("support", "0033_pathtoarchiverelease"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='users',
-            name='email',
-            field=models.EmailField(default=None, max_length=254, unique=True, validators=[django.core.validators.EmailValidator(message='Invalid email')]),
+            model_name="users",
+            name="email",
+            field=models.EmailField(
+                default=None,
+                max_length=254,
+                unique=True,
+                validators=[
+                    django.core.validators.EmailValidator(message="Invalid email")
+                ],
+            ),
         ),
     ]

@@ -14,6 +14,7 @@ import torch.nn.functional as F
 
 from sklearn.metrics import accuracy_score, f1_score
 
+
 class FeatureExtractor(nn.Module):
     def __init__(self):
         super(FeatureExtractor, self).__init__()
@@ -27,6 +28,7 @@ class FeatureExtractor(nn.Module):
         x = torch.flatten(x, start_dim=1)
         return x
 
+
 class SiameseNetwork(nn.Module):
     def __init__(self):
         super(SiameseNetwork, self).__init__()
@@ -38,7 +40,7 @@ class SiameseNetwork(nn.Module):
             nn.Dropout(0.2),
             nn.Linear(512, 256),
             nn.BatchNorm1d(256),
-            nn.LeakyReLU(inplace=True)
+            nn.LeakyReLU(inplace=True),
         )
 
     def forward_once(self, x):
@@ -84,6 +86,7 @@ class CosineSimilarityLoss(nn.Module):
         loss = F.mse_loss(cos_sim, label)
         return loss
 
+
 class ModifiedSiameseNetwork(SiameseNetwork):
     def __init__(self):
         super().__init__()
@@ -97,6 +100,7 @@ def calculate_metrics(output1, output2, labels):
     accuracy = accuracy_score(labels.cpu(), predictions.cpu())
     f1 = f1_score(labels.cpu(), predictions.cpu())
     return accuracy, f1
+
 
 def train_epoch(model, train_loader, optimizer, criterion, device):
     model.train()
@@ -154,11 +158,13 @@ def validate(model, val_loader, criterion, device):
     return average_loss, average_accuracy, average_f1
 
 
-transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-])
+transform = transforms.Compose(
+    [
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ]
+)
 
 TRAIN_CSV = "data/rebuilded_face_simm/train_pairs.csv"
 VAL_CSV = "data/rebuilded_face_simm/val_pairs.csv"
@@ -184,8 +190,10 @@ criterion = CosineSimilarityLoss()
 num_epochs = 50
 for epoch in tqdm(range(num_epochs)):
     print(f"-----Epoch {epoch + 1}/{num_epochs}------")
-    
-    train_loss, train_accuracy, train_f1 = train_epoch(model, train_loader, optimizer, criterion, device)
+
+    train_loss, train_accuracy, train_f1 = train_epoch(
+        model, train_loader, optimizer, criterion, device
+    )
     val_loss, val_accuracy, val_f1 = validate(model, val_loader, criterion, device)
 
     print(
@@ -197,4 +205,3 @@ torch.save(
     model.state_dict(),
     "training_results/weights/nude_classifier/siamese_network_model.pth",
 )
-

@@ -5,18 +5,28 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('support', '0020_pathtoeventsfiles_clear_name_of_archive_and_more'),
+        ("support", "0020_pathtoeventsfiles_clear_name_of_archive_and_more"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='EventsHeadbands',
+            name="EventsHeadbands",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('headband', models.ImageField(upload_to=support.models.events_headbands_path)),
-                ('event_id', models.CharField(max_length=150)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "headband",
+                    models.ImageField(upload_to=support.models.events_headbands_path),
+                ),
+                ("event_id", models.CharField(max_length=150)),
             ],
         ),
     ]

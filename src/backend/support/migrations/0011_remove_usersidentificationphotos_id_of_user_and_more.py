@@ -4,18 +4,20 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('support', '0010_rename_user_id_usersidentificationphotos_id_of_user_and_more'),
+        (
+            "support",
+            "0010_rename_user_id_usersidentificationphotos_id_of_user_and_more",
+        ),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='usersidentificationphotos',
-            name='id_of_user',
+            model_name="usersidentificationphotos",
+            name="id_of_user",
         ),
         migrations.RemoveField(
-            model_name='userssavedarchives',
-            name='id_of_user',
+            model_name="userssavedarchives",
+            name="id_of_user",
         ),
     ]
