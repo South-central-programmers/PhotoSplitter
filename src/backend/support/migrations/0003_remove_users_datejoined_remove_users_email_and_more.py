@@ -6,48 +6,51 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('support', '0002_events_private_mode_users_first_name_users_groups_and_more'),
+        ("support", "0002_events_private_mode_users_first_name_users_groups_and_more"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='users',
-            name='datejoined',
+            model_name="users",
+            name="datejoined",
         ),
         migrations.RemoveField(
-            model_name='users',
-            name='email',
+            model_name="users",
+            name="email",
         ),
         migrations.RemoveField(
-            model_name='users',
-            name='groups',
+            model_name="users",
+            name="groups",
         ),
         migrations.RemoveField(
-            model_name='users',
-            name='is_superuser',
+            model_name="users",
+            name="is_superuser",
         ),
         migrations.RemoveField(
-            model_name='users',
-            name='last_login',
+            model_name="users",
+            name="last_login",
         ),
         migrations.RemoveField(
-            model_name='users',
-            name='password',
+            model_name="users",
+            name="password",
         ),
         migrations.RemoveField(
-            model_name='users',
-            name='user_permissions',
+            model_name="users",
+            name="user_permissions",
         ),
         migrations.RemoveField(
-            model_name='users',
-            name='username',
+            model_name="users",
+            name="username",
         ),
         migrations.AddField(
-            model_name='users',
-            name='user',
-            field=models.OneToOneField(default=None, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
+            model_name="users",
+            name="user",
+            field=models.OneToOneField(
+                default=None,
+                on_delete=django.db.models.deletion.CASCADE,
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]

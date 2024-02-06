@@ -4,19 +4,18 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('support', '0022_remove_eventsheadbands_event_id_and_more'),
+        ("support", "0022_remove_eventsheadbands_event_id_and_more"),
     ]
 
     operations = [
         migrations.RenameModel(
-            old_name='EventsHeadbands',
-            new_name='Headbands',
+            old_name="EventsHeadbands",
+            new_name="Headbands",
         ),
         migrations.RenameField(
-            model_name='headbands',
-            old_name='event',
-            new_name='events',
+            model_name="headbands",
+            old_name="event",
+            new_name="events",
         ),
     ]

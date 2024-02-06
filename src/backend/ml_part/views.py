@@ -14,6 +14,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
 class Model:
     def __init__(self, model_path, device):
         self.model = self.load_model(model_path, device).to(device)
@@ -35,33 +36,33 @@ class NudeModel(Model):
             model = models.resnet50(pretrained=False)
             num_ftrs = model.fc.in_features
             model.fc = torch.nn.Sequential(
-                torch.nn.Dropout(0.3),
-                torch.nn.Linear(num_ftrs, 2)
+                torch.nn.Dropout(0.3), torch.nn.Linear(num_ftrs, 2)
             )
         elif self.model_name == "efficientnet":
             model = models.efficientnet_b0(pretrained=False)
             num_ftrs = model.classifier[1].in_features
             model.classifier = torch.nn.Sequential(
-                torch.nn.Dropout(0.3),
-                torch.nn.Linear(num_ftrs, 2)
+                torch.nn.Dropout(0.3), torch.nn.Linear(num_ftrs, 2)
             )
         model.load_state_dict(torch.load(model_path, map_location=torch.device("cpu")))
         model.eval()
         return model
 
     def predict(self, image_path):
-        transform = transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
+        transform = transforms.Compose(
+            [
+                transforms.Resize((224, 224)),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+            ]
+        )
 
         try:
-            image = Image.open(image_path).convert('RGB')
+            image = Image.open(image_path).convert("RGB")
         except UnidentifiedImageError:
             os.remove(image_path)
             return None, None
-        
+
         image = transform(image).unsqueeze(0)
 
         with torch.no_grad():
@@ -72,16 +73,18 @@ class NudeModel(Model):
         return top_class.item(), top_p.item()
 
     def process_images_nude(self, folder_path, device):
-        transform = transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
+        transform = transforms.Compose(
+            [
+                transforms.Resize((224, 224)),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+            ]
+        )
         results = []
-        
+
         for root, _, files in os.walk(folder_path):
             for file in tqdm(files):
-                if file.lower().endswith(('png', 'jpg', 'jpeg')):
+                if file.lower().endswith(("png", "jpg", "jpeg")):
                     image_path = os.path.join(root, file)
                     pred_class, prob = self.predict(image_path)
 
@@ -90,8 +93,9 @@ class NudeModel(Model):
 
                     if pred_class == 0 and prob > 0.8:  # 0 - это класс NSFW
                         results.append((image_path, prob))
-        
+
         return results
+
 
 class FaceCutModel:
     def __init__(self, model_path):
@@ -105,14 +109,16 @@ class FaceCutModel:
 
         for root, dirs, files in os.walk(DATA_PATH):
             for file in files:
-                if file.lower().endswith((".png", ".jpg", ".jpeg", ".heif", ".gif", ".bmp")):
+                if file.lower().endswith(
+                    (".png", ".jpg", ".jpeg", ".heif", ".gif", ".bmp")
+                ):
                     filename_with_ext = os.path.join(root, file)
                     try:
-                        image = Image.open(filename_with_ext).convert('RGB')
+                        image = Image.open(filename_with_ext).convert("RGB")
                     except UnidentifiedImageError:
                         os.remove(filename_with_ext)
                         continue
-                    
+
                     results = self.model.predict(image, verbose=False, conf=0.6)
 
                     if len(results[0].boxes.xyxy.tolist()) == 0:
@@ -121,10 +127,17 @@ class FaceCutModel:
                     image_folder = os.path.join(FINAL_PATH, f"{Path(file).stem}")
                     os.makedirs(image_folder, exist_ok=True)
 
-                    for counter_filename, result in enumerate(results[0].boxes.xyxy.tolist(), start=1):
+                    for counter_filename, result in enumerate(
+                        results[0].boxes.xyxy.tolist(), start=1
+                    ):
                         x1, y1, x2, y2 = result
                         face = image.crop((x1, y1, x2, y2)).convert("RGB")
-                        face.save(os.path.join(image_folder, f"{Path(file).stem}_{counter_filename}{Path(file).suffix}"))
+                        face.save(
+                            os.path.join(
+                                image_folder,
+                                f"{Path(file).stem}_{counter_filename}{Path(file).suffix}",
+                            )
+                        )
 
 
 class SiameseNetwork(torch.nn.Module):
@@ -156,6 +169,7 @@ class SiameseNetwork(torch.nn.Module):
         x = self.backbone(x)
         return x
 
+
 class SiameseModel:
     def __init__(self, model_path, device):
         self.device = device
@@ -168,18 +182,22 @@ class SiameseModel:
         return model
 
     def preprocess_image(self, image_path):
-        transform = transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ])
+        transform = transforms.Compose(
+            [
+                transforms.Resize((224, 224)),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+                ),
+            ]
+        )
 
         try:
-            image = Image.open(image_path).convert('RGB')
+            image = Image.open(image_path).convert("RGB")
         except UnidentifiedImageError:
             os.remove(image_path)
             return None
-        
+
         image = transform(image)
         return image.unsqueeze(0).to(self.device)
 
@@ -197,7 +215,7 @@ class SiameseModel:
 
         for root, _, files in os.walk(folder_path):
             for file in files:
-                if file.lower().endswith(('.png', '.jpg', '.jpeg')):
+                if file.lower().endswith((".png", ".jpg", ".jpeg")):
                     image_path = os.path.join(root, file)
                     image_tensor = self.preprocess_image(image_path)
 
@@ -211,7 +229,6 @@ class SiameseModel:
                         similarities.append((image_path, similarity))
 
         return similarities
-
 
 
 # def load_model_nude(model_path, model_name, device):

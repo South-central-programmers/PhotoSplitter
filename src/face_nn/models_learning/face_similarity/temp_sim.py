@@ -10,6 +10,7 @@ from torchvision import models
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+
 class SiameseNetwork(nn.Module):
     def __init__(self):
         super(SiameseNetwork, self).__init__()
@@ -25,7 +26,7 @@ class SiameseNetwork(nn.Module):
             nn.Linear(4096, 4096),
             nn.ReLU(inplace=True),
             nn.Dropout(0.5),
-            nn.Linear(4096, 2622)
+            nn.Linear(4096, 2622),
         )
 
     def forward_once(self, x):
@@ -39,5 +40,6 @@ class SiameseNetwork(nn.Module):
         positive_embedding = self.forward_once(positive)
         negative_embedding = self.forward_once(negative)
         return anchor_embedding, positive_embedding, negative_embedding
+
 
 model = SiameseNetwork().to(device)

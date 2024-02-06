@@ -4,19 +4,26 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('support', '0034_alter_users_email'),
+        ("support", "0034_alter_users_email"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='PathToArchiveReleaseOnePeoplePhotos',
+            name="PathToArchiveReleaseOnePeoplePhotos",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('path_to_release_archive', models.FileField(upload_to='')),
-                ('event_id', models.IntegerField()),
-                ('user_id', models.IntegerField()),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("path_to_release_archive", models.FileField(upload_to="")),
+                ("event_id", models.IntegerField()),
+                ("user_id", models.IntegerField()),
             ],
         ),
     ]

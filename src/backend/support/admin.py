@@ -32,25 +32,39 @@ from .models import Users, Events, EventParticipation
 
 
 class EventsAdmin(ModelAdmin):
-    list_display = (['user', 'eventname', 'description', 'eventdate', 'location', 'likes', 'file_archive', 'private_mode'])
-    verbose_name = 'Events'
+    list_display = [
+        "user",
+        "eventname",
+        "description",
+        "eventdate",
+        "location",
+        "likes",
+        "file_archive",
+        "private_mode",
+    ]
+    verbose_name = "Events"
 
 
 class UsersSavedArchivesAdmin(ModelAdmin):
-    list_display = (['user', 'saved_file_archive'])
-    verbose_name = 'UsersArchive'
+    list_display = ["user", "saved_file_archive"]
+    verbose_name = "UsersArchive"
     can_delete = False
 
 
 class UsersInline(admin.StackedInline):
     model = Users
     can_delete = False
-    list_display = (['user', 'email', 'first_name', 'last_name',])
-    verbose_name = 'Users'
+    list_display = [
+        "user",
+        "email",
+        "first_name",
+        "last_name",
+    ]
+    verbose_name = "Users"
 
 
 class CustomizedUsers(UserAdmin):
-    inlines = (UsersInline, )
+    inlines = (UsersInline,)
 
 
 admin.site.unregister(User)
@@ -58,5 +72,5 @@ admin.site.register(UsersSavedArchives, UsersSavedArchivesAdmin)
 admin.site.register(User, CustomizedUsers)
 admin.site.register(Events, EventsAdmin)
 admin.site.register(EventParticipation)
-admin.site.site_titlle = 'Admin-pannel PhotoSplitter'
-admin.site.site_header = 'Admin-pannel PhotoSplitter'
+admin.site.site_titlle = "Admin-pannel PhotoSplitter"
+admin.site.site_header = "Admin-pannel PhotoSplitter"
