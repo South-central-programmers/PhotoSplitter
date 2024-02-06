@@ -70,6 +70,12 @@ class PathToArchiveRelease(models.Model):
     event_id = models.IntegerField()
 
 
+class PathToArchiveReleaseOnePeoplePhotos(models.Model):
+    path_to_release_archive = models.FileField()
+    event_id = models.IntegerField()
+    user_id = models.IntegerField()
+
+
 class Headbands(models.Model):
     event = models.ForeignKey(Events, on_delete=models.CASCADE, default=None)
     headband = models.ImageField(upload_to=events_headbands_path)

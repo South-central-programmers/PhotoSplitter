@@ -3,19 +3,35 @@ import zipfile
 import rarfile
 import tarfile
 import py7zr
+import shutil
+import asyncio
+
 from pathlib import Path
 
-from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from ml_part.views import NudeModel, FaceCutModel, SiameseModel
+from telegram_bot.views import main
 
-from .forms import UserRegistrationForm, AddUserPhotoForm, AddEvent, AddPreviewPhotoForm, ChangeUserPhotoForm, ChangePreviewPhotoForm, ConfirmEventPasswordForm
-from .models import UsersIdentificationphotos, Events, PathToEventsFiles, Headbands, PathToArchiveRelease, User
+import torch
+from torchvision import transforms
+
+from .forms import AddUserPhotoForm, AddEvent, AddPreviewPhotoForm, ChangeUserPhotoForm, ChangePreviewPhotoForm, ConfirmEventPasswordForm
+from .models import UsersIdentificationphotos, Events, PathToEventsFiles, Headbands, PathToArchiveRelease, User, PathToArchiveReleaseOnePeoplePhotos
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-menu = [{'title': 'Домой', 'url_name': 'main'}, {'title': 'Выход', 'url_name': 'logout'},
-        {'title': 'Добавить событие', 'url_name': 'add_event'}, {'title': 'Профиль', 'url_name': 'profile'}]
+NUDE_MODEL_PATH = BASE_DIR / "ml_part/ml_models/nude_classification/model_resnet.pth"
+FACE_CUT_MODEL_PATH = BASE_DIR / "ml_part/ml_models/face_detection/face_detection_without_cutout_best.pt"
+SIAMESE_MODEL_PATH = BASE_DIR / "ml_part/ml_models/face_similarity/best_model_state_dict_271.pth"
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+nude_model = NudeModel(NUDE_MODEL_PATH, "resnet", DEVICE)
+face_cut_model = FaceCutModel(FACE_CUT_MODEL_PATH)
+siamese_model = SiameseModel(SIAMESE_MODEL_PATH, DEVICE)
+
+menu = [{'title': 'Выход', 'url_name': 'logout'},
+     {'title': 'Профиль', 'url_name': 'profile'}]
 
 
 class EventObjects:
@@ -26,7 +42,7 @@ class EventObjects:
 
 def about(request):
     menu_local = [{'title': 'Регистрация', 'url_name': 'reg'},
-            {'title': 'Войти', 'url_name': 'login'}, {'title': 'Контакты', 'url_name': 'contacts'}]
+            {'title': 'Войти', 'url_name': 'login'}]
     return render(request, 'support/about.html', {'menu': menu_local})
 
 
@@ -40,7 +56,7 @@ def main_page(request):
     if not request.user.is_authenticated:
         return redirect('about')
     events = Events.objects.all().order_by('-likes')
-    paginator = Paginator(events, 2)
+    paginator = Paginator(events, 12)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     page = request.GET.get('page')
@@ -71,7 +87,7 @@ def search_events_paginator(request):
         query = request.GET.get('meetings')
         queryset = events.filter(eventname__icontains=query)
         page = request.GET.get('page')
-        paginator = Paginator(queryset, 2)
+        paginator = Paginator(queryset, 12)
         try:
             events = paginator.page(page)
         except PageNotAnInteger:
@@ -98,43 +114,6 @@ def search_events_paginator(request):
                         })
 
         return render(request, 'support/main_page.html', context)
-
-
-def register(request):
-    if request.user.is_authenticated:
-        return redirect('main')
-    else:
-        if request.method == 'POST':
-            user_form = UserRegistrationForm(request.POST)
-            if user_form.is_valid():
-                try:
-                    User.objects.get(user_form.cleaned_data['email'])
-                    new_user = user_form.save(commit=False)
-                    new_user.set_password(user_form.cleaned_data['password'])
-                    new_user.save()
-                    return redirect('login')
-                except:
-                    print('Error')
-        else:
-            user_form = UserRegistrationForm()
-        return render(request, 'support/reg.html', {'user_form': user_form, 'menu': menu})
-
-
-def login_view(request):
-    if request.user.is_authenticated:
-        return redirect('main')
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            return redirect('main')
-        else:
-            error_message = 'Пользователь не найден'
-            return render(request, 'support/login.html', {'error_message': error_message})
-    else:
-        return render(request, template_name='support/login.html')
 
 
 def add_profile_photos(request):
@@ -222,14 +201,6 @@ def change_preview_photos(request, event_id):
     return render(request, 'support/change_preview.html', {'form': form, 'event_id': event_id})
 
 
-def logout_view(request):
-    if not request.user.is_authenticated:
-        return redirect('login')
-
-    logout(request)
-    return redirect('main')
-
-
 def get_compression_type(file_path):
     try:
         with zipfile.ZipFile(file_path) as zf:
@@ -243,30 +214,62 @@ def get_compression_type(file_path):
     except rarfile.Error:
         pass
 
-    try:
-        with py7zr.SevenZipFile(file_path) as rf:
-            return "7z"
-    except:
-        pass
-
-    try:
-        with tarfile.open(file_path) as rf:
-            return "gz"
-    except:
-        pass
+    # try:
+    #     with py7zr.SevenZipFile(file_path) as rf:
+    #         return "7z"
+    # except:
+    #     pass
+    #
+    # try:
+    #     with tarfile.open(file_path) as rf:
+    #         return "gz"
+    # except:
+    #     pass
 
     return 'Unknown'
 
 
 def dearchive_zip_file(cutted_file_path, id_of_event, full_file_path):
-    if get_compression_type(full_file_path) == 'zip':
-        file_zip = zipfile.ZipFile(full_file_path, 'r')
-        file_zip.extractall(os.path.join(BASE_DIR, f'media/{cutted_file_path}/{id_of_event}'))
+    file_zip = zipfile.ZipFile(full_file_path, 'r')
+    file_zip.extractall(os.path.join(BASE_DIR, f'media/{cutted_file_path}/{id_of_event}/temp'))
+    extract_path = os.path.join(BASE_DIR, f'media/{cutted_file_path}/{id_of_event}')
+    os.makedirs(extract_path, exist_ok=True)
+    macosx_path = os.path.join(extract_path, '__MACOSX')
+    if os.path.exists(macosx_path):
+        shutil.rmtree(macosx_path)
+
+    counter = 1
+    for folder, subfolders, files in os.walk(os.path.join(BASE_DIR, f'media/{cutted_file_path}/{id_of_event}/temp')):
+        for file in files:
+            if file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.bmp', '.heif')):
+                source_file_path = os.path.join(folder, file)
+                new_filename = f'{counter}{os.path.splitext(file)[1]}'
+                new_file_path = os.path.join(folder, new_filename)
+                os.rename(source_file_path, new_file_path)
+                destination_file_path = os.path.join(extract_path, new_filename)
+                shutil.copyfile(new_file_path, destination_file_path)
+                counter += 1
+
+    shutil.rmtree(os.path.join(BASE_DIR, f'media/{cutted_file_path}/{id_of_event}/temp'))
 
 
 def dearchive_rar_file(cutted_file_path, id_of_event, full_file_path, clear_name_of_archive):
     file_rar = rarfile.RarFile(full_file_path, 'r')
-    file_rar.extractall(os.path.join(BASE_DIR, f'media/{cutted_file_path}/{id_of_event}'))
+    file_rar.extractall(os.path.join(BASE_DIR, f'media/{cutted_file_path}/{id_of_event}/temp'))
+    extract_path = os.path.join(BASE_DIR, f'media/{cutted_file_path}/{id_of_event}/{clear_name_of_archive}')
+    os.makedirs(extract_path, exist_ok=True)
+
+    counter = 1  # Счетчик для именования файлов
+    for folder, subfolders, files in os.walk(os.path.join(BASE_DIR, f'media/{cutted_file_path}/{id_of_event}/temp')):
+        for file in files:
+            if file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.bmp', '.heif')):
+                source_file_path = os.path.join(folder, file)
+                new_filename = f'{counter}{os.path.splitext(file)[1]}'
+                destination_file_path = os.path.join(extract_path, new_filename)
+                shutil.move(source_file_path, destination_file_path)
+                counter += 1
+
+    shutil.rmtree(os.path.join(BASE_DIR, f'media/{cutted_file_path}/{id_of_event}/temp'))
 
 
 def dearchive_7z_file(file_path, cutted_file_path, id_of_event, full_file_path):
@@ -288,7 +291,7 @@ def add_event(request):
                                     and form.cleaned_data['password'] == '')):
             Events.objects.create(eventname=form.cleaned_data['eventname'], description=form.cleaned_data['description'],
                                   eventdate=form.cleaned_data['eventdate'], location=form.cleaned_data['location'],
-                                  likes=form.cleaned_data['likes'], file_archive=form.cleaned_data['file_archive'],
+                                  file_archive=form.cleaned_data['file_archive'],
                                   password=form.cleaned_data['password'], unique_link=form.cleaned_data['unique_link'],
                                   private_mode=form.cleaned_data['private_mode'], user_id=request.user.id)
             queryset_of_last_event = Events.objects.latest('id')
@@ -297,6 +300,14 @@ def add_event(request):
             file_path = str(part_of_set)[0:str(part_of_set).rfind('/')]
             if get_compression_type(full_file_path) == 'zip':
                 dearchive_zip_file(file_path, str(queryset_of_last_event.id), full_file_path)
+                folder_path = os.path.join(BASE_DIR, f'media/{file_path}/{str(queryset_of_last_event.id)}')
+
+                results = nude_model.process_images_nude(folder_path, DEVICE)
+                if results:
+                    asyncio.run(main(f"в ивенте {str(queryset_of_last_event.id)} есть nfsw контент"))
+
+                face_cut_model.faces_cutting(os.path.join(BASE_DIR, f'media/{file_path}/{str(queryset_of_last_event.id)}'))
+
                 PathToEventsFiles.objects.create(
                     path_to_unarchive_file=f'{file_path}/{str(queryset_of_last_event.id)}',
                     id_of_event=str(queryset_of_last_event.id), id_of_user=request.user.id, clear_name_of_archive='None',
@@ -326,74 +337,55 @@ def add_event(request):
 
 
 def go_profile(request):
+
+    global this_event_preview
+    this_event_preview = '/media/headbands_of_events/default/default.webp'
     try:
         events = Events.objects.filter(user_id=request.user.id)
         absolute_objects = []
         for elem in events:
-            all_paths = {}
-            this_event_urls = []
-            if elem.id not in all_paths:
-                this_event = PathToEventsFiles.objects.get(id_of_event=elem.id, id_of_user=request.user.id)
-                all_paths[str(elem.id)] = this_event.path_to_unarchive_file
-                if this_event.type_of_archive == 'zip':
-                    for key in all_paths:
-                        for file_name in os.listdir(os.path.join(BASE_DIR, f'media/{all_paths[key]}')):
-                            this_event_urls.append(f'/media/{all_paths[key]}/{file_name}')
-                if this_event.type_of_archive == 'rar':
-                    for key in all_paths:
-                        for file_name in os.listdir(
-                                os.path.join(BASE_DIR, f'media/{all_paths[key]}/{this_event.clear_name_of_archive}')):
-                            this_event_urls.append(
-                                f'/media/{all_paths[key]}/{this_event.clear_name_of_archive}/{file_name}')
-            one_object = EventObjects(elem, this_event_urls)
+            try:
+                this_event_preview = f'/media/{Headbands.objects.get(event_id=elem.id).headband}'
+            except:
+                this_event_preview = '/media/headbands_of_events/default/default.webp'
+            one_object = EventObjects(elem, this_event_preview)
             absolute_objects.append(one_object)
+
         result = UsersIdentificationphotos.objects.get(user_id=request.user.id)
+
         profile_photo_1 = result.identification_photo_1
         profile_photo_2 = result.identification_photo_2
+
     except:
-        print(1)
+        # print(1)
+        try:
+            this_event_preview = f'/media/{Headbands.objects.get(event_id=elem.id).headband}'
+        except:
+            this_event_preview = '/media/headbands_of_events/default/default.webp'
         profile_photo_info = 'Ваш профиль не полный. Добавьте фото'
         return render(request, 'support/profile.html',
-                      {'user_id': request.user.id, 'profile_photo_info': profile_photo_info, 'has_full_profile': 0})
+                      {'user_id': request.user.id, 'profile_photo_info': profile_photo_info, 'has_full_profile': 0, 'result': this_event_preview})
 
-    return render(request, 'support/profile.html', {'user_id': request.user.id, 'absolute_objects': absolute_objects, 'profile_photo_1':profile_photo_1, 'profile_photo_2':profile_photo_2, 'has_full_profile': 1})
-
-
-def go_to_add_photo(request):
-    return render(request, 'support/add_photo.html', {'user_id': request.user.id, })
-
-
-def check_events(request, user_id):
-    events = Events.objects.filter(user_id=request.user.id)
-    absolute_objects = []
-    for elem in events:
-        all_paths = {}
-        this_event_urls = []
-        if elem.id not in all_paths:
-            this_event = PathToEventsFiles.objects.get(id_of_event=elem.id, id_of_user=user_id)
-            all_paths[str(elem.id)] = this_event.path_to_unarchive_file
-            if this_event.type_of_archive == 'zip':
-                for key in all_paths:
-                    for file_name in os.listdir(os.path.join(BASE_DIR, f'media/{all_paths[key]}')):
-                        this_event_urls.append(f'/media/{all_paths[key]}/{file_name}')
-            if this_event.type_of_archive == 'rar':
-                for key in all_paths:
-                    for file_name in os.listdir(os.path.join(BASE_DIR, f'media/{all_paths[key]}/{this_event.clear_name_of_archive}')):
-                        this_event_urls.append(f'/media/{all_paths[key]}/{this_event.clear_name_of_archive}/{file_name}')
-        one_object = EventObjects(elem, this_event_urls)
-        absolute_objects.append(one_object)
-    return render(request, 'support/my_events.html', {'absolute_objects': absolute_objects})
+    return render(request, 'support/profile.html', {'user_id': request.user.id, 'events': events, 'absolute_objects': absolute_objects, 'profile_photo_1':profile_photo_1, 'profile_photo_2':profile_photo_2, 'has_full_profile': 1, 'result': this_event_preview})
 
 
 def view_detail_events(request, event_id):
     global full_path
     this_event = Events.objects.get(pk=event_id)
     this_event_path_to_catalog = PathToEventsFiles.objects.get(id_of_event=event_id)
+
     try:
         Headbands.objects.get(event_id=event_id)
         has_headband = 1
     except:
         has_headband = 0
+
+    try:
+        UsersIdentificationphotos.objects.get(user_id=request.user.id)
+        has_profile_photo = 1
+    except:
+        has_profile_photo = 0
+
     all_photos = []
     if this_event_path_to_catalog.type_of_archive == 'zip':
         full_path = os.path.join(BASE_DIR, f'media/{this_event_path_to_catalog.path_to_unarchive_file}')
@@ -407,9 +399,9 @@ def view_detail_events(request, event_id):
     if request.user.id == this_event.user_id:
         return render(request, 'support/detail_event_this_user.html', {'this_event': this_event, 'all_photos': all_photos,
                                                                        'has_headband': has_headband,
-                                                                       'this_event_path_to_catalog': full_path})
+                                                                       'this_event_path_to_catalog': full_path, 'has_profile_photo': has_profile_photo})
     else:
-        return render(request, 'support/detail_event.html', {'this_event': this_event, 'all_photos': all_photos})
+        return render(request, 'support/detail_event.html', {'this_event': this_event, 'all_photos': all_photos, 'has_profile_photo': has_profile_photo})
 
 
 def confirm_password(request, event_id):
@@ -427,6 +419,13 @@ def confirm_password(request, event_id):
                     has_headband = 1
                 except:
                     has_headband = 0
+
+                try:
+                    UsersIdentificationphotos.objects.get(user_id=request.user.id)
+                    has_profile_photo = 1
+                except:
+                    has_profile_photo = 0
+
                 all_photos = []
                 if this_event_path_to_catalog.type_of_archive == 'zip':
                     full_path = os.path.join(BASE_DIR, f'media/{this_event_path_to_catalog.path_to_unarchive_file}')
@@ -443,10 +442,10 @@ def confirm_password(request, event_id):
                     return render(request, 'support/detail_event_this_user.html',
                                   {'this_event': this_event, 'all_photos': all_photos,
                                    'has_headband': has_headband,
-                                   'this_event_path_to_catalog': full_path})
+                                   'this_event_path_to_catalog': full_path, 'has_profile_photo': has_profile_photo})
                 else:
                     return render(request, 'support/detail_event.html',
-                                  {'this_event': this_event, 'all_photos': all_photos})
+                                  {'this_event': this_event, 'all_photos': all_photos, 'has_profile_photo': has_profile_photo})
             else:
                 print('Пароли не совпали')
         else:
@@ -476,7 +475,54 @@ def download_all_zip(request, event_id):
     for folder, subfolders, files in os.walk(full_file_path):
         for file in files:
             if file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.bmp')):
-                pass
                 file_zip.write(os.path.join(folder, file), os.path.relpath(os.path.join(folder, file), full_save_file_path), compress_type=zipfile.ZIP_DEFLATED)
     return render(request, 'support/download_all.html', {'path_to_archive': req})
+
+
+def download_my_zip(request, event_id):
+    # this_event_path_to_catalog = PathToEventsFiles.objects.get(id_of_event=event_id)
+    #
+    # device = torch.device("cpu")
+    #
+    # model_path = os.path.join(BASE_DIR, "ml_part/best_model_state_dict_271.pth")
+    # model = load_model_siamse(model_path, device)
+    #
+    # result = UsersIdentificationphotos.objects.get(user_id=request.user.id)
+    # profile_photo_1 = result.identification_photo_1
+    # profile_photo_2 = result.identification_photo_2
+    #
+    # target_image_path = os.path.join(BASE_DIR, f'media/{profile_photo_1}')
+    # folder_path = os.path.join(BASE_DIR, f'media/{str(this_event_path_to_catalog.path_to_unarchive_file)}_cutted')
+    #
+    # transform = transforms.Compose([
+    #     transforms.Resize((224, 224)),
+    #     transforms.ToTensor(),
+    # ])
+    #
+    # similar_images = compare_images_siamse(model, target_image_path, folder_path, transform, device)
+    # similar_images = list(set(similar_images))
+    # print(similar_images)
+    #
+    # this_event_path_to_catalog = PathToEventsFiles.objects.get(id_of_event=event_id)
+    # this_event_path_to_catalog_postfix = str(this_event_path_to_catalog.path_to_unarchive_file)[
+    #                                      str(this_event_path_to_catalog.path_to_unarchive_file).find('/') + 1:]
+    # full_file_path = os.path.join(BASE_DIR, f'media/{str(this_event_path_to_catalog.path_to_unarchive_file)}')
+    # full_save_file_path = os.path.join(BASE_DIR, f'media/archive_release_this_people/{str(this_event_path_to_catalog_postfix)}')
+    # print(full_save_file_path)
+    # path_to_archive = os.path.join(full_save_file_path, 'Archive_with_your_photos.zip')
+    # os.makedirs(os.path.dirname(f'{full_save_file_path}/'), exist_ok=True)
+    # file_zip = zipfile.ZipFile(path_to_archive, 'w')
+    # local_path_to_archive = f'archive_release_this_people/{str(this_event_path_to_catalog_postfix)}/Archive_with_your_photos.zip'
+    #
+    # try:
+    #     req = PathToArchiveReleaseOnePeoplePhotos.objects.get(event_id=event_id)
+    # except:
+    #     PathToArchiveReleaseOnePeoplePhotos.objects.create(path_to_release_archive=local_path_to_archive, event_id=event_id, user_id=request.user.id)
+    #     req = PathToArchiveReleaseOnePeoplePhotos.objects.get(event_id=event_id)
+    #
+    # for elem in similar_images:
+    #     file_zip.write(elem, os.path.relpath(elem, full_save_file_path), compress_type=zipfile.ZIP_DEFLATED)
+    #
+    # return render(request, 'support/download_my.html', {'path_to_archive': req})
+    return render(request, 'support/download_my.html')
 

@@ -1,59 +1,63 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 {% load static %}
 <head>
-	<title>{% block title%} {% endblock %}</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title%} {% endblock %}</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/common.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/fonts.css' %}">
+
 </head>
 <body>
-<table class="table-page" border=0 cellpadding="0" cellspacing="0">
-<tr><td valign=top>
-	<p><a href="{% url 'main' %}"><img src="/media/logo/logotip.png" id="logo" width="50"
-									   height="50"></a></p>
-{% block mainmenu %}
-			<div class="header">
-				<ul id="mainmenu" class="mainmenu">
+<header>
+    <a class="logo" href="{% url 'main' %}"><img class="logo" src="/media/logo/logotip.png"></a>
+    <h1>PhotoSplitter</h1>
+    {% block search %}
+    <form class="search-form" action="{% url 'find' %}" method="GET">
+        <div>
+            <input type="search" name="meetings" placeholder="search">
+        </div>
+    </form>
+    {% endblock %}
 
-	{% for m in menu %}
-		{% if not forloop.last %}
-				<li><a href="{% url m.url_name %}">{{m.title}}</a></li>
-		{% else %}
-				<li class="last"><a href="{% url m.url_name %}">{{m.title}}</a></li>
-		{% endif %}
-	{% endfor %}
-				</ul>
-				<div class="clear"></div>
-			</div>
-{% endblock mainmenu %}
-	{% block search %}
-		<form action="{% url 'find' %}" method="GET">
-			<input type="search" name="meetings" placeholder="Поиск ивента">
-			<button type="submit">Найти</button>
-		</form>
-	{% endblock search %}
+    {% block menu %}
+    <div class="menu">
+        {% if menu != None %}
+            {% for m in menu %}
+            <a class="nav-link" href="{% url m.url_name %}">{{m.title}}</a>
+            {% endfor %}
+        {% else %}
+            {% block profile_icon %}
+            <a class="profile-icon" href="{% url 'profile' %}"></a>
+            {% endblock profile_icon %}
 
-<table class="table-content" border=0 cellpadding="0" cellspacing="0">
-<td valign="top" class="content">
-	<!-- Хлебные крошки -->
-	{% block breadcrumbs %}
-	{% endblock %}
+            {% block exit %}
+            <a class="exit" href="{% url 'logout' %}"></a>
+            {% endblock %}
+        {% endif %}
+    </div>
+    {% endblock %}
+
+</header>
+
+<!-- Хлебные крошки -->
+{% block breadcrumbs %}
+{% endblock %}
 
 <!-- Блок контента -->
-    <div class="content-text">
-{% block content %}
-{% endblock %}
-	</div>
+<div class="content-text">
+    {% block content %}
+    {% endblock %}
+</div>
 <!-- Конец блока контента -->
 
-</td></tr></table>
-</td></tr>
 <!-- Footer -->
-<tr><td valign=top>
-	<div id="footer">
-		<p></p>
-	</div>
-</td></tr></table>
+<div class="footer">
+    <p>2024–2024</p>
+    <a class="nav-link" href="{% url 'contacts' %}">Контакты</a>
+</div>
 <!-- Конец footer'а и страницы -->
 </body>
 </html>

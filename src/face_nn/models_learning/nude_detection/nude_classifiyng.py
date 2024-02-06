@@ -50,7 +50,7 @@ def initialize_model(model_name):
             param.requires_grad = False
 
         num_ftrs = model_ft.classifier[1].in_features
-        model_ft.classifier = nn.Sequential(nn.Dropout(0.3), nn.Linear(num_ftrs, 2))
+        model_ft.classifier = nn.Sequential(nn.Dropout(0.2), nn.Linear(num_ftrs, 2))
 
     elif model_name == "resnet":
         model_ft = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V1)
@@ -59,7 +59,7 @@ def initialize_model(model_name):
             param.requires_grad = False
 
         num_ftrs = model_ft.fc.in_features
-        model_ft.fc = nn.Sequential(nn.Dropout(0.3), nn.Linear(num_ftrs, 2))
+        model_ft.fc = nn.Sequential(nn.Dropout(0.2), nn.Linear(num_ftrs, 2))
 
     else:
         raise ValueError("Invalid model name")

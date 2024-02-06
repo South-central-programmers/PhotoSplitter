@@ -37,7 +37,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'support.apps.SupportConfig'
+    'support.apps.SupportConfig',
+    'telegram_bot.apps.TelegramBotConfig',
+    'registration.apps.RegistrationConfig',
+    'reset_password.apps.ResetPasswordConfig',
+    'ml_part.apps.MlPartConfig'
 ]
 
 MIDDLEWARE = [
@@ -55,7 +59,7 @@ ROOT_URLCONF = 'facedetect.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -126,6 +130,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'facedetect/static'),
+    os.path.join(BASE_DIR, 'support/static'),
 ]
 
 

@@ -18,7 +18,7 @@
           <div class="card-body">
             <div class="media">
                     {% for photo in event.event_photos %}
-                        <img src="{{ photo }}" alt="No photo" width="350" class="mr-3">
+                        <img src="{{ photo }}" alt="No photo" class="mr-3">
                     {% endfor %}
                 <div class="media-body">
                     <p class="card-text">{{ event.event_name.description|safe|linebreaks|truncatewords:50}}</p>
