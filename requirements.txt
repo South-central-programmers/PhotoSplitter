@@ -18,3 +18,5 @@ matplotlib==3.7.1
 
 tqdm==4.66.1
 comet_ml==3.33.9
+
+python-telegram-bot==20.7
