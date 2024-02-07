@@ -9,8 +9,8 @@ services:
     volumes:
       - ./src/backend:/app
       - static_volume:/app/staticfiles
-    expose:
-      - 8000
+    ports:
+      - "8000:8000"
 
 volumes:
   static_volume:
