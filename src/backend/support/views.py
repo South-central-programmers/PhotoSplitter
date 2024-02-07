@@ -428,12 +428,9 @@ def add_event(request):
                 )
 
                 results = nude_model.process_images_nude(folder_path, DEVICE)
-                if results:
-                    asyncio.run(
-                        main(
-                            f"в ивенте {str(queryset_of_last_event.id)} есть nfsw контент"
-                        )
-                    )
+                print(len(results))
+                if len(results) > 0:
+                    print("nfsw content")
 
                 face_cut_model.faces_cutting(
                     os.path.join(
