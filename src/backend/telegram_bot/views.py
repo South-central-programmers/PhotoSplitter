@@ -4,7 +4,7 @@ import asyncio
 
 async def send_telegram_message(message):
     bot_token = "6482291282:AAEqeVEcqcrGsr2o3eRqlhjSVAah_-8HNHo"
-    chat_id = "738203440"
+    chat_id = "4123682112"
 
     bot = Bot(token=bot_token)
     await bot.send_message(chat_id=chat_id, text=message)
