@@ -20,3 +20,6 @@ tqdm==4.66.1
 comet_ml==3.33.9
 
 python-telegram-bot==20.7
+
+rarfile==4.1
+py7zr==0.20.8
