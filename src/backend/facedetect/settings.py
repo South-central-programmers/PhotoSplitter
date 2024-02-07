@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-4gb_@=dm(gmm6%e$$4)+)tk51hjrc9v7t06qm_jrk0ekk#sa(a
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['photosplitter.ru', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['*']
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
