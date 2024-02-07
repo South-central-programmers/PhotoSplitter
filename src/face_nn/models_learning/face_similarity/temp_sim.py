@@ -52,14 +52,11 @@ class LFWDataset(Dataset):
 class SiameseNetwork(nn.Module):
     def __init__(self):
         super(SiameseNetwork, self).__init__()
-        # Используем VGG16 в качестве основы
         self.backbone = models.vgg16(pretrained=True).features
         
-        # Замораживаем веса предварительно обученной сети
         for param in self.backbone.parameters():
             param.requires_grad = False
         
-        # Структура классификатора из первоначального кода
         self.classifier = nn.Sequential(
             nn.Linear(512 * 7 * 7, 4096),
             nn.ReLU(inplace=True),
@@ -87,14 +84,12 @@ transform = transforms.Compose([
     transforms.ToTensor(),
 ])
 
-# Предполагается, что пути к датасетам уже заданы
 lfw_train_dataset = LFWDataset(root_dir='', transform=transform)
 lfw_val_dataset = LFWDataset(root_dir='', transform=transform)
 
 train_loader = DataLoader(lfw_train_dataset, batch_size=16, shuffle=True, drop_last=True)
 val_loader = DataLoader(lfw_val_dataset, batch_size=16, shuffle=False, drop_last=True)
 
-# Инициализация модели, оптимизатора и функции потерь
 model = SiameseNetwork().to(device)
 optimizer = optim.Adam(model.parameters(), lr=1e-4)
 criterion = nn.TripletMarginLoss(margin=1.0)
@@ -125,13 +120,11 @@ def validate(model, data_loader, criterion, device):
             total_loss += loss.item()
     return total_loss / len(data_loader)
 
-# Тренировка и валидация модели
 def main(model, train_loader, val_loader, optimizer, criterion, device, epochs):
     for epoch in range(epochs):
         train_loss = train(model, train_loader, optimizer, criterion, device)
         val_loss = validate(model, val_loader, criterion, device)
         print(f'Epoch: {epoch+1}, Train Loss: {train_loss:.4f}, Validation Loss: {val_loss:.4f}')
 
-# Запуск обучения
-epochs = 100  # Примерное количество эпох
+epochs = 100
 main(model, train_loader, val_loader, optimizer, criterion, device, epochs)
