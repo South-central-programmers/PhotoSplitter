@@ -2,8 +2,9 @@ version: '3'
 
 services:
   web:
-    build: ./src/backend
-    command: gunicorn facedetect.wsgi:application --bind 0.0.0.0:8000
+    build:
+      context: .
+      dockerfile: src/backend/Dockerfile
     volumes:
       - ./src/backend:/app
       - static_volume:/app/staticfiles
@@ -11,10 +12,8 @@ services:
     expose:
       - 8000
     environment:
-      - "DJANGO_SECRET_KEY=django-insecure-4gb_@=dm(gmm6%e$$4)+)tk51hjrc9v7t06qm_jrk0ekk#sa(a"
-      - "DEBUG=False"
-    depends_on:
-      - db
+      - DEBUG=False
+      - SECRET_KEY=django-insecure-4gb_@=dm(gmm6%e$$4)+)tk51hjrc9v7t06qm_jrk0ekk#sa(a
 
   nginx:
     image: nginx:latest
