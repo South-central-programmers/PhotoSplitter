@@ -27,3 +27,5 @@ py7zr==0.20.8
 gunicorn==21.2.0
 
 dill==0.3.8
+
+django-prometheus==2.3.1

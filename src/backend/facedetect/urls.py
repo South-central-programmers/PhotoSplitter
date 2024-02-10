@@ -24,6 +24,7 @@ from support.views import main_page
 urlpatterns = [
     path("", include("support.urls")),
     path("admin/", admin.site.urls),
+    path('', include('django_prometheus.urls')),
 ]
 
 if settings.DEBUG:

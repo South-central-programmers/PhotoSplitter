@@ -43,9 +43,12 @@ INSTALLED_APPS = [
     "registration.apps.RegistrationConfig",
     "reset_password.apps.ResetPasswordConfig",
     "ml_part.apps.MlPartConfig",
+    'django_prometheus',
 ]
 
 MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
