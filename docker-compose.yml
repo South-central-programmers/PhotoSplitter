@@ -26,6 +26,25 @@ services:
     depends_on:
       - web
 
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    depends_on:
+      - web
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=xv8GaClN1wG71CT
+      - GF_SECURITY_ADMIN_USER=photosplitter_admin         # Замените на ваше имя пользователя администратора
+    depends_on:
+      - prometheus
+
 volumes:
   static_volume:
   media_volume:
