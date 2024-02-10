@@ -1,4 +1,7 @@
 import torch
+import insightface
+import numpy as np
+from torch import nn
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from PIL import Image
@@ -8,7 +11,6 @@ from tqdm import tqdm
 from torchvision import models
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 
 class LFWDataset(Dataset):
     def __init__(self, root_dir, transform=None):
@@ -68,46 +70,68 @@ train_loader = DataLoader(
 val_loader = DataLoader(lfw_val_dataset, batch_size=16, shuffle=False, drop_last=True)
 
 
+class CustomFullyConnected(nn.Module):
+    def __init__(self, in_features):
+        super(CustomFullyConnected, self).__init__()
+        self.sequence = nn.Sequential(
+            nn.Linear(in_features, 8192),
+            nn.BatchNorm1d(8192),
+            nn.LeakyReLU(inplace=True),
+            nn.Linear(8192, 4096),
+            nn.BatchNorm1d(4096),
+            nn.LeakyReLU(inplace=True),
+            nn.Dropout(p=0.2),
+            nn.Linear(4096, 2048),
+            nn.BatchNorm1d(2048),
+            nn.LeakyReLU(inplace=True),
+            nn.Dropout(p=0.2),
+            nn.Linear(2048, 1024),
+            nn.BatchNorm1d(1024),
+            nn.LeakyReLU(inplace=True),
+            nn.Dropout(p=0.1),
+            nn.Linear(1024, 512),
+            nn.BatchNorm1d(512),
+            nn.LeakyReLU(inplace=True),
+            nn.Dropout(p=0.1),
+            nn.Linear(512, 256),
+            nn.BatchNorm1d(256),
+            nn.LeakyReLU(inplace=True),
+            nn.Linear(256, 128),
+            nn.BatchNorm1d(128),
+            nn.LeakyReLU(inplace=True),
+        )
+    
+    def forward(self, x):
+        return self.sequence(x)
+
 class SiameseNetwork(torch.nn.Module):
     def __init__(self):
         super(SiameseNetwork, self).__init__()
-        self.backbone = models.resnet50(
-            weights=models.resnet.ResNet50_Weights.IMAGENET1K_V1
-        )
-        self.backbone.fc = torch.nn.Sequential(
-            torch.nn.Linear(self.backbone.fc.in_features, 8192),
-            torch.nn.BatchNorm1d(8192),
-            torch.nn.LeakyReLU(inplace=True),
-            torch.nn.Linear(8192, 4096),
-            torch.nn.BatchNorm1d(4096),
-            torch.nn.LeakyReLU(inplace=True),
-            torch.nn.Dropout(p=0.2),
-            torch.nn.Linear(4096, 2048),
-            torch.nn.BatchNorm1d(2048),
-            torch.nn.LeakyReLU(inplace=True),
-            torch.nn.Dropout(p=0.2),
-            torch.nn.Linear(2048, 1024),
-            torch.nn.BatchNorm1d(1024),
-            torch.nn.LeakyReLU(inplace=True),
-            torch.nn.Dropout(p=0.1),
-            torch.nn.Linear(1024, 512),
-            torch.nn.BatchNorm1d(512),
-            torch.nn.LeakyReLU(inplace=True),
-            torch.nn.Dropout(p=0.1),
-            torch.nn.Linear(512, 256),
-            torch.nn.BatchNorm1d(256),
-            torch.nn.LeakyReLU(inplace=True),
-            torch.nn.Linear(256, 128),
-            torch.nn.BatchNorm1d(128),
-            torch.nn.LeakyReLU(inplace=True),
-        )
+        self.backbone = insightface.app.FaceAnalysis(rec_name='arcface_r100_v1')
+        self.backbone.prepare(ctx_id=0)
+        self.custom_fc = CustomFullyConnected(in_features=512)
 
     def forward(self, anchor, positive, negative):
-        anchor_embedding = self.backbone(anchor)
-        positive_embedding = self.backbone(positive)
-        negative_embedding = self.backbone(negative)
+        anchor_embedding = self._get_embedding(anchor)
+        positive_embedding = self._get_embedding(positive)
+        negative_embedding = self._get_embedding(negative)
+
+        anchor_embedding = self.custom_fc(anchor_embedding)
+        positive_embedding = self.custom_fc(positive_embedding)
+        negative_embedding = self.custom_fc(negative_embedding)
 
         return anchor_embedding, positive_embedding, negative_embedding
+
+    def _get_embedding(self, images):
+        embeddings = []
+        for img in images:
+            img_np = img.cpu().numpy().transpose(1, 2, 0)
+            img = Image.fromarray((img_np * 255).astype(np.uint8))
+            face = self.backbone.get(img)
+            embedding = face.normed_embedding
+            embeddings.append(embedding)
+        embeddings = np.vstack(embeddings)
+        return torch.tensor(embeddings, dtype=torch.float).to(device)
 
 
 model = SiameseNetwork().to(device)
