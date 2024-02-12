@@ -8,6 +8,7 @@
     <link rel="stylesheet" type="text/css" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'css/common.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'css/fonts.css' %}">
+    <link rel="icon" type="image/png" href="../../media/logo/logotip.ico">
 
 </head>
 <body>
@@ -29,13 +30,14 @@
             <a class="nav-link" href="{% url m.url_name %}">{{m.title}}</a>
             {% endfor %}
         {% else %}
-            {% block profile_icon %}
-            <a class="profile-icon" href="{% url 'profile' %}"></a>
-            {% endblock profile_icon %}
-
             {% block exit %}
             <a class="exit" href="{% url 'logout' %}"></a>
             {% endblock %}
+            {% block profile_icon %}
+                <a href="{% url 'profile' %}">
+                    <img class="profile-icon" src="{{ profile_icon_path }}">
+                </a>
+            {% endblock profile_icon %}
         {% endif %}
     </div>
     {% endblock %}

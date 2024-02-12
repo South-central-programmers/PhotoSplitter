@@ -15,25 +15,10 @@ from telegram_bot.views import main
 
 import torch
 from torchvision import transforms
+from deepface import DeepFace
 
-from .forms import (
-    AddUserPhotoForm,
-    AddEvent,
-    AddPreviewPhotoForm,
-    ChangeUserPhotoForm,
-    ChangePreviewPhotoForm,
-    ConfirmEventPasswordForm,
-)
-from .models import (
-    UsersIdentificationphotos,
-    Events,
-    PathToEventsFiles,
-    Headbands,
-    PathToArchiveRelease,
-    User,
-    PathToArchiveReleaseOnePeoplePhotos,
-)
-
+from .forms import *
+from .models import *
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 NUDE_MODEL_PATH = BASE_DIR / "ml_part/ml_models/nude_classification/model_resnet.pth"
@@ -60,21 +45,83 @@ class EventObjects:
         self.info_event = info_event
         self.event_photos = event_photos
 
+def delete_event(request, event_id):
+    objs = Events.objects.get(id=event_id)
+    obj2 = PathToEventsFiles.objects.get(id_of_event=event_id)
+    obj2.delete()
+    objs.delete()
+    if os.path.exists(os.path.join(BASE_DIR, f"media/upload_event_files/{request.user.id}/{event_id}")) and os.path.exists(os.path.join(BASE_DIR, f"media/upload_event_files/{request.user.id}/{event_id}_cutted")):
+        shutil.rmtree(os.path.join(BASE_DIR, f"media/upload_event_files/{request.user.id}/{event_id}_cutted"))
+        shutil.rmtree(os.path.join(BASE_DIR, f"media/upload_event_files/{request.user.id}/{event_id}"))
+    #print(os.path.join(BASE_DIR, f"media/upload_event_files/{request.user.id}/{event_id}_cutted"))
+    # os.remove(os.path.join(BASE_DIR, f"media/upload_event_files/{request.user.id}/{event_id}_cutted"))
+    # os.remove(os.path.join(BASE_DIR, f"media/upload_event_files/{request.user.id}/{event_id}"))
+    return redirect("main")
+
+
+def get_profile_icon(request):
+    if request.user.is_authenticated and User_Photo.objects.filter(user_id=request.user.id).exists():
+        return f'/media/{str(User_Photo.objects.get(user_id=request.user.id).photo)}'
+    else:
+        return f'/media/pictures/null_profile.jpg'
 
 def about(request):
-    menu_local = [
-        {"title": "Регистрация", "url_name": "reg"},
-        {"title": "Войти", "url_name": "login"},
-    ]
-    return render(request, "support/about.html", {"menu": menu_local})
+    menu_local = [{'title': 'Регистрация', 'url_name': 'reg'},
+            {'title': 'Войти', 'url_name': 'login'}]
+    return render(request, 'support/about.html', {'menu': menu_local})
 
 
 def contacts(request):
-    menu_local = [
-        {"title": "Регистрация", "url_name": "reg"},
-        {"title": "Войти", "url_name": "login"},
-    ]
-    return render(request, "support/contacts.html", {"menu": menu_local})
+    if(not request.user.is_authenticated):
+        menu_local = [{'title': 'Регистрация', 'url_name': 'reg'},
+                      {'title': 'Войти', 'url_name': 'login'}]
+    else:
+        menu_local = None
+    return render(request, 'support/contacts.html', {'menu': menu_local, 'profile_icon_path' : get_profile_icon(request),})
+
+
+
+
+def like_event(request, event_id):
+    like = EventLikes.objects.all().filter(event_id=event_id).filter(user_id=request.user.id)
+    if not like.exists():
+        print(1)
+        event = Events.objects.get(id=event_id)
+        event.likes += 1
+        event.save()
+        EventLikes.objects.create(event_id = event_id, user_id = request.user.id)
+    return redirect('main')
+
+    #return render(request, 'support/detail_event.html<>', {'event_id' : event_id})
+
+def add_prewiev_profile_photo(request):
+    if request.method == 'POST':
+        form = AddUserProfilePhotoForm(request.POST, request.FILES)
+        if form.is_valid():
+            if not User_Photo.objects.filter(user_id=request.user.id).exists():
+                photo1 = form.cleaned_data['photo']
+                User_Photo.objects.create(user_id=request.user.id, photo = photo1)
+            else:
+                user_photo = User_Photo.objects.get(user_id=request.user.id)
+                full_file_path = os.path.join(BASE_DIR, f'media/{str(user_photo.photo)}')
+                if os.path.exists(full_file_path):
+                    os.remove(full_file_path)
+                user_photo.photo = form.cleaned_data['photo']
+                user_photo.save()
+                print(11111)
+            # return render(request, 'support/profile.html', {
+            #     'profile_icon_path': f'/media/{str(User_Photo.objects.get(user_id=request.user.id).photo)}'})
+            return redirect('profile')
+        else:
+            print('Error')
+    else:
+        form = AddUserProfilePhotoForm()
+    # if User_Photo.objects.filter(user_id=request.user.id).exists():
+    return render(request, 'support/add_profile_photo.html', {'form': form, 'profile_icon_path' : get_profile_icon(request),})
+    # else:
+    #     print(1211)
+    #     return render(request, 'support/profile.html', {'form': form, 'profile_icon_path' : get_profile_icon(request),})
+
 
 
 def main_page(request):
@@ -108,7 +155,7 @@ def main_page(request):
         request,
         "support/main_page.html",
         {
-            "menu": menu,
+            'profile_icon_path': get_profile_icon(request),
             "page_obj": page_obj,
             "absolute_objects": absolute_objects,
             "events": events,
@@ -153,7 +200,7 @@ def search_events_paginator(request):
                 "absolute_objects": absolute_objects,
                 "total": total,
                 "query": query,
-                "menu": menu,
+                'profile_icon_path': get_profile_icon(request),
             }
         )
 
@@ -174,7 +221,7 @@ def add_profile_photos(request):
             print("Error")
     else:
         form = AddUserPhotoForm()
-    return render(request, "support/add_photo.html", {"form": form})
+    return render(request, "support/add_photo.html", {"form": form, 'profile_icon_path' : get_profile_icon(request),})
 
 
 def change_profile_photos(request):
@@ -241,7 +288,7 @@ def change_profile_photos(request):
             print("Error")
     else:
         form = ChangeUserPhotoForm()
-    return render(request, "support/change_photo.html", {"form": form})
+    return render(request, "support/change_photo.html", {"form": form, 'profile_icon_path' : get_profile_icon(request),})
 
 
 def add_preview_photos(request, event_id):
@@ -257,7 +304,7 @@ def add_preview_photos(request, event_id):
     else:
         form = AddPreviewPhotoForm()
     return render(
-        request, "support/add_preview.html", {"form": form, "event_id": event_id}
+        request, "support/add_preview.html", {"form": form, "event_id": event_id, 'profile_icon_path' : get_profile_icon(request),}
     )
 
 
@@ -277,7 +324,7 @@ def change_preview_photos(request, event_id):
     else:
         form = ChangePreviewPhotoForm()
     return render(
-        request, "support/change_preview.html", {"form": form, "event_id": event_id}
+        request, "support/change_preview.html", {"form": form, "event_id": event_id, 'profile_icon_path' : get_profile_icon(request),}
     )
 
 
@@ -478,25 +525,22 @@ def add_event(request):
             print("Error")
     else:
         form = AddEvent()
-    return render(request, "support/add_event.html", {"form": form})
+    return render(request, "support/add_event.html", {"form": form, 'profile_icon_path' : get_profile_icon(request),})
+def go_profile(request):   #переделать
 
-
-def go_profile(request):
     global this_event_preview
-    this_event_preview = "/media/headbands_of_events/default/default.webp"
+    this_event_preview = '/media/headbands_of_events/default/default.webp'
     try:
         events = Events.objects.filter(user_id=request.user.id)
         absolute_objects = []
         for elem in events:
             try:
-                this_event_preview = (
-                    f"/media/{Headbands.objects.get(event_id=elem.id).headband}"
-                )
+                this_event_preview = f'/media/{Headbands.objects.get(event_id=elem.id).headband}'
             except:
-                this_event_preview = "/media/headbands_of_events/default/default.webp"
+                this_event_preview = '/media/headbands_of_events/default/default.webp'
             one_object = EventObjects(elem, this_event_preview)
             absolute_objects.append(one_object)
-
+        # print(1)
         result = UsersIdentificationphotos.objects.get(user_id=request.user.id)
 
         profile_photo_1 = result.identification_photo_1
@@ -505,36 +549,23 @@ def go_profile(request):
     except:
         # print(1)
         try:
-            this_event_preview = (
-                f"/media/{Headbands.objects.get(event_id=elem.id).headband}"
-            )
+            this_event_preview = f'/media/{Headbands.objects.get(event_id=elem.id).headband}'
         except:
-            this_event_preview = "/media/headbands_of_events/default/default.webp"
-        profile_photo_info = "Ваш профиль не полный. Добавьте фото"
-        return render(
-            request,
-            "support/profile.html",
-            {
-                "user_id": request.user.id,
-                "profile_photo_info": profile_photo_info,
-                "has_full_profile": 0,
-                "result": this_event_preview,
-            },
-        )
+            this_event_preview = '/media/headbands_of_events/default/default.webp'
+        profile_photo_info = 'Ваш профиль не полный. Добавьте фото'
 
-    return render(
-        request,
-        "support/profile.html",
-        {
-            "user_id": request.user.id,
-            "events": events,
-            "absolute_objects": absolute_objects,
-            "profile_photo_1": profile_photo_1,
-            "profile_photo_2": profile_photo_2,
-            "has_full_profile": 1,
-            "result": this_event_preview,
-        },
-    )
+        return render(request, 'support/profile.html',
+                      {'user_id': request.user.id, 'profile_photo_info': profile_photo_info, 'has_full_profile': 0, 'result': this_event_preview, 'profile_icon_path' : get_profile_icon(request), })
+    print(get_profile_icon(request))
+    action = "";
+    try:
+        User_Photo.objects.get(user_id=request.user.id)
+        action = "Изменить фото профиля"
+    except:
+        action = "Добавить фото профиля"
+    return render(request, 'support/profile.html', {'user_id': request.user.id, 'events': events, 'absolute_objects': absolute_objects, 'profile_photo_1':profile_photo_1, 'profile_photo_2':profile_photo_2, 'has_full_profile': 1,
+                                                    'result': this_event_preview, 'profile_icon_path' : get_profile_icon(request), 'action': action})
+
 
 
 def view_detail_events(request, event_id):
@@ -583,6 +614,7 @@ def view_detail_events(request, event_id):
                 "has_headband": has_headband,
                 "this_event_path_to_catalog": full_path,
                 "has_profile_photo": has_profile_photo,
+                'profile_icon_path': get_profile_icon(request),
             },
         )
     else:
@@ -593,6 +625,7 @@ def view_detail_events(request, event_id):
                 "this_event": this_event,
                 "all_photos": all_photos,
                 "has_profile_photo": has_profile_photo,
+                'profile_icon_path': get_profile_icon(request),
             },
         )
 
@@ -651,6 +684,7 @@ def confirm_password(request, event_id):
                             "has_headband": has_headband,
                             "this_event_path_to_catalog": full_path,
                             "has_profile_photo": has_profile_photo,
+                            'profile_icon_path': get_profile_icon(request),
                         },
                     )
                 else:
@@ -661,6 +695,7 @@ def confirm_password(request, event_id):
                             "this_event": this_event,
                             "all_photos": all_photos,
                             "has_profile_photo": has_profile_photo,
+                            'profile_icon_path': get_profile_icon(request),
                         },
                     )
             else:
@@ -673,7 +708,7 @@ def confirm_password(request, event_id):
     return render(
         request,
         "support/confirm_event_password.html",
-        {"form": form, "this_event": event_id},
+        {"form": form, "this_event": event_id, 'profile_icon_path' : get_profile_icon(request),},
     )
 
 
@@ -711,52 +746,59 @@ def download_all_zip(request, event_id):
                     os.path.relpath(os.path.join(folder, file), full_save_file_path),
                     compress_type=zipfile.ZIP_DEFLATED,
                 )
-    return render(request, "support/download_all.html", {"path_to_archive": req})
+    return render(request, "support/download_all.html", {"path_to_archive": req, 'profile_icon_path' : get_profile_icon(request),})
 
 
-def download_my_zip(request, event_id):
-    # this_event_path_to_catalog = PathToEventsFiles.objects.get(id_of_event=event_id)
-    #
-    # device = torch.device("cpu")
-    #
-    # model_path = os.path.join(BASE_DIR, "ml_part/best_model_state_dict_271.pth")
-    # model = load_model_siamse(model_path, device)
-    #
-    # result = UsersIdentificationphotos.objects.get(user_id=request.user.id)
-    # profile_photo_1 = result.identification_photo_1
-    # profile_photo_2 = result.identification_photo_2
-    #
-    # target_image_path = os.path.join(BASE_DIR, f'media/{profile_photo_1}')
-    # folder_path = os.path.join(BASE_DIR, f'media/{str(this_event_path_to_catalog.path_to_unarchive_file)}_cutted')
-    #
-    # transform = transforms.Compose([
-    #     transforms.Resize((224, 224)),
-    #     transforms.ToTensor(),
-    # ])
-    #
-    # similar_images = compare_images_siamse(model, target_image_path, folder_path, transform, device)
-    # similar_images = list(set(similar_images))
-    # print(similar_images)
-    #
-    # this_event_path_to_catalog = PathToEventsFiles.objects.get(id_of_event=event_id)
-    # this_event_path_to_catalog_postfix = str(this_event_path_to_catalog.path_to_unarchive_file)[
-    #                                      str(this_event_path_to_catalog.path_to_unarchive_file).find('/') + 1:]
-    # full_file_path = os.path.join(BASE_DIR, f'media/{str(this_event_path_to_catalog.path_to_unarchive_file)}')
-    # full_save_file_path = os.path.join(BASE_DIR, f'media/archive_release_this_people/{str(this_event_path_to_catalog_postfix)}')
-    # print(full_save_file_path)
-    # path_to_archive = os.path.join(full_save_file_path, 'Archive_with_your_photos.zip')
-    # os.makedirs(os.path.dirname(f'{full_save_file_path}/'), exist_ok=True)
-    # file_zip = zipfile.ZipFile(path_to_archive, 'w')
-    # local_path_to_archive = f'archive_release_this_people/{str(this_event_path_to_catalog_postfix)}/Archive_with_your_photos.zip'
-    #
-    # try:
-    #     req = PathToArchiveReleaseOnePeoplePhotos.objects.get(event_id=event_id)
-    # except:
-    #     PathToArchiveReleaseOnePeoplePhotos.objects.create(path_to_release_archive=local_path_to_archive, event_id=event_id, user_id=request.user.id)
-    #     req = PathToArchiveReleaseOnePeoplePhotos.objects.get(event_id=event_id)
-    #
-    # for elem in similar_images:
-    #     file_zip.write(elem, os.path.relpath(elem, full_save_file_path), compress_type=zipfile.ZIP_DEFLATED)
-    #
-    # return render(request, 'support/download_my.html', {'path_to_archive': req})
-    return render(request, "support/download_my.html")
+def compare_images(target_image_path, folder_path): 
+    similar_images = [] 
+    for root, dirs, files in os.walk(folder_path): 
+        for file in files: 
+            if file.endswith((".jpg", ".jpeg", ".png")): 
+                try: 
+                    current_image_path = os.path.join(root, file) 
+                    result = DeepFace.verify(img1_path=target_image_path, img2_path=current_image_path) 
+                    if result["verified"]: 
+                        similar_images.append(current_image_path) 
+                except Exception as e: 
+                    print(f"Error comparing images: {e}") 
+    return similar_images 
+ 
+def download_my_zip(request, event_id): 
+    result = UsersIdentificationphotos.objects.get(user_id=request.user.id) 
+    profile_photo_1 = result.identification_photo_1 
+    profile_photo_2 = result.identification_photo_2 
+     
+    target_image_paths = [ 
+        os.path.join(BASE_DIR, f'media/{profile_photo_1}'), 
+        os.path.join(BASE_DIR, f'media/{profile_photo_2}') 
+    ] 
+     
+    this_event_path_to_catalog = PathToEventsFiles.objects.get(id_of_event=event_id) 
+    folder_path = os.path.join(BASE_DIR, f'media/{str(this_event_path_to_catalog.path_to_unarchive_file)}_cutted') 
+     
+    all_similar_images = [] 
+    for target_image_path in target_image_paths: 
+        similar_images = compare_images(target_image_path, folder_path) 
+        all_similar_images.extend(similar_images) 
+     
+    all_similar_images = list(set(all_similar_images)) 
+     
+    this_event_postfix = str(this_event_path_to_catalog.path_to_unarchive_file)[str(this_event_path_to_catalog.path_to_unarchive_file).find('/') + 1:] 
+    full_save_file_path = os.path.join(BASE_DIR, f'media/archive_release_this_people/{this_event_postfix}') 
+    path_to_archive = os.path.join(full_save_file_path, 'Archive_with_your_photos.zip') 
+    os.makedirs(os.path.dirname(path_to_archive), exist_ok=True) 
+     
+    with zipfile.ZipFile(path_to_archive, 'w') as file_zip: 
+        for elem in all_similar_images: 
+            file_zip.write(elem, os.path.relpath(elem, full_save_file_path), compress_type=zipfile.ZIP_DEFLATED) 
+     
+    PathToArchiveReleaseOnePeoplePhotos.objects.update_or_create( 
+        path_to_release_archive=path_to_archive,  
+        event_id=event_id,  
+        user_id=request.user.id, 
+        defaults={'path_to_release_archive': 'archive_release_this_people/' + os.path.basename(path_to_archive)} 
+    ) 
+     
+    req = PathToArchiveReleaseOnePeoplePhotos.objects.get(event_id=event_id, user_id=request.user.id) 
+     
+    return render(request, 'support/download_my.html', {'path_to_archive': req})

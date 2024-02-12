@@ -12,15 +12,16 @@
     <div class="event">
         {% if event.info_event.private_mode == 0 %}
         <div class="event-preview">
-            <img src="{{ event.event_photos }}"  alt="No preview" class="mr-3"/>
+            <img src="{{ event.event_photos }}"  alt="No photo" class="mr-3"/>
         </div>
         <p><a href="/detail_events/{{event.info_event.id}}">{{event.info_event.eventname}}</a></p>
         {% else %}
         <div class="event-preview">
-            <img src="{{ event.event_photos }}"  alt="No preview" class="mr-3"/>
+            <img src="{{ event.event_photos }}"  alt="No photo" class="mr-3"/>
         </div>
         <p><a href="/confirm_password/{{event.info_event.id}}">{{event.info_event.eventname}}</a></p>
         {% endif %}
+        <p>{{ event.info_event.description }}</p>
         <div class="likes">
             <img class="likes-image" src="/media/images/heart_image.png" alt="heart"/>
             <p>{{ event.info_event.likes }}</p>

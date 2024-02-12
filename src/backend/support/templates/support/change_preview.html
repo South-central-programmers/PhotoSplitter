@@ -1,5 +1,5 @@
 {% extends  'support/base.html'%}
-{% block title %} {% endblock %}
+{% block title %}Изменить preview{% endblock %}
 {% block content %}
     <form action="{% url 'change_preview' event_id %}" enctype="multipart/form-data" method="post">
         {% csrf_token %}

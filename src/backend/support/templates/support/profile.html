@@ -1,13 +1,19 @@
 {% extends  'support/base.html'%}
-{% block title %} {% endblock %}
+{% block title %}Профиль {% endblock %}
+{% block profile_icon %}
+    <a href="{% url 'main' %}">
+        <img class="profile-icon" src="{{ profile_icon_path }}">
+    </a>
+{% endblock %}
 {% block content %}
 {% if has_full_profile == 1 %}
     <img src="{{ profile_photo_1.url }}" alt="" width="150" class="mr-1">
     <img src="{{ profile_photo_2.url }}" alt="" width="150" class="mr-1">
-    <h1><a href="{% url 'change_photo' %}">Изменить фото профиля</a></h1>
+    <h1><a href="{% url 'change_photo' %}">Изменить тестовые фотографии</a></h1>
+    <h1><a href="{% url 'add_profile_photo' %}">{{ action }}</a></h1>
 {% else %}
     <p>{{profile_photo_info}}</p>
-    <h1><a href="{% url 'add_photo' %}">Добавить фото профиля</a></h1>
+    <h1><a href="{% url 'add_photo' %}">Добавить тестовые фотографии</a></h1>
 {% endif %}
 {% for event in absolute_objects %}
     <div class="event">
@@ -39,7 +45,7 @@
 <!--    <title>Title</title>-->
 <!--</head>-->
 <!--<body>-->
-<!--<h1>Id вашего профиля - {{ user_id }}</h1>-->
+<!--<h1>Id вашего профиля -{{ user_id }}</h1>-->
 <!--{% if has_full_profile == 1 %}-->
 <!--    <img src="{{ profile_photo_1.url }}" alt="" width="350" class="mr-3">-->
 <!--    <img src="{{ profile_photo_2.url }}" alt="" width="350" class="mr-3">-->

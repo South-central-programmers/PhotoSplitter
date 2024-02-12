@@ -61,6 +61,7 @@ class Events(models.Model):
     private_mode = models.BooleanField(default=False)
 
 
+
 class EventLikes(models.Model):
     event_id = models.IntegerField()
     user_id = models.IntegerField()
@@ -93,3 +94,11 @@ class Headbands(models.Model):
 class EventParticipation(models.Model):
     event_id = models.IntegerField()
     user_id = models.IntegerField()
+
+
+def photo_profile_path(instance, filename):
+    return os.path.join('users_profile_photos', str(instance.user.id), filename)
+class User_Photo(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default=None)
+    photo = models.ImageField(upload_to=photo_profile_path,  default=None, blank=True)
+

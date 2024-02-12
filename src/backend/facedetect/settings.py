@@ -23,9 +23,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-4gb_@=dm(gmm6%e$$4)+)tk51hjrc9v7t06qm_jrk0ekk#sa(a"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ["*"]
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
@@ -136,7 +136,6 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "facedetect/static"),
     os.path.join(BASE_DIR, "support/static"),
 ]
-
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

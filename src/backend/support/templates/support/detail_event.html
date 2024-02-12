@@ -1,5 +1,5 @@
 {% extends  'support/base.html'%}
-{% block title %} {% endblock %}
+{% block title %} О ивенте{% endblock %}
 {% block content %}
 <h2>{{ this_event.eventname }}</h2>
 <p class="event-description">{{ this_event.description }}</p>
@@ -9,9 +9,10 @@
         <p>Организатор ивента: {{ this_event.location }}</p>
     </div>
     <div class="event-likes">
-        <button class="like-button">
-            Поставить лайк
-        </button>
+        <form action="{% url 'like_event' event_id=this_event.id %}" method="post">
+            {% csrf_token %}
+            <button type="submit">Лайк</button>
+            </form>
         <p>{{ this_event.likes }}</p>
     </div>
 </div>

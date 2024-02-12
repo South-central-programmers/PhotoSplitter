@@ -16,6 +16,11 @@ urlpatterns = [
     path("contacts/", contacts, name="contacts"),
     path("find/", search_events_paginator, name="find"),
     path("profile/", go_profile, name="profile"),
+
+    path("delete_event/<int:event_id>", delete_event, name="delete_event"),
+    path('add_profile_photo/', add_prewiev_profile_photo, name='add_profile_photo'),
+    path('like/<int:event_id>', like_event, name='like_event'),
+
     path("download_all_zip/<int:event_id>", download_all_zip, name="download_all_zip"),
     path("download_my_zip/<int:event_id>", download_my_zip, name="download_my_zip"),
     path("confirm_password/<int:event_id>", confirm_password, name="confirm_password"),
