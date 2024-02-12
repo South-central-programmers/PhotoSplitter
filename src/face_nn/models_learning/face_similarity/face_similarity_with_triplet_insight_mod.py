@@ -9,6 +9,7 @@ import os
 import random
 from tqdm import tqdm
 from torchvision import models
+import cv2
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -125,11 +126,15 @@ class SiameseNetwork(torch.nn.Module):
     def _get_embedding(self, images):
         embeddings = []
         for img in images:
-            img_np = img.cpu().numpy().transpose(1, 2, 0)
-            img = Image.fromarray((img_np * 255).astype(np.uint8))
-            face = self.backbone.get(img)
-            embedding = face.normed_embedding
-            embeddings.append(embedding)
+            img_np = img.cpu().detach().numpy().transpose(1, 2, 0)
+            img_np = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
+            img_np = (img_np * 255).astype(np.uint8)
+            face = self.backbone.get(img_np)
+            if face:
+                embedding = face[0].normed_embedding 
+                embeddings.append(embedding)
+            else:
+                embeddings.append(np.zeros((512,)))
         embeddings = np.vstack(embeddings)
         return torch.tensor(embeddings, dtype=torch.float).to(device)
 
