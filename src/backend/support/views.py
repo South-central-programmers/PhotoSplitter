@@ -21,18 +21,18 @@ from .forms import *
 from .models import *
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-NUDE_MODEL_PATH = BASE_DIR / "ml_part/ml_models/nude_classification/model_resnet.pth"
-FACE_CUT_MODEL_PATH = (
-    BASE_DIR / "ml_part/ml_models/face_detection/face_detection_without_cutout_best.pt"
-)
-SIAMESE_MODEL_PATH = (
-    BASE_DIR / "ml_part/ml_models/face_similarity/best_model_state_dict_271.pth"
-)
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# NUDE_MODEL_PATH = BASE_DIR / "ml_part/ml_models/nude_classification/model_resnet.pth"
+# FACE_CUT_MODEL_PATH = (
+#     BASE_DIR / "ml_part/ml_models/face_detection/face_detection_without_cutout_best.pt"
+# )
+# SIAMESE_MODEL_PATH = (
+#     BASE_DIR / "ml_part/ml_models/face_similarity/best_model_state_dict_271.pth"
+# )
+# DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-nude_model = NudeModel(NUDE_MODEL_PATH, "resnet", DEVICE)
-face_cut_model = FaceCutModel(FACE_CUT_MODEL_PATH)
-siamese_model = SiameseModel(SIAMESE_MODEL_PATH, DEVICE)
+# nude_model = NudeModel(NUDE_MODEL_PATH, "resnet", DEVICE)
+# face_cut_model = FaceCutModel(FACE_CUT_MODEL_PATH)
+# siamese_model = SiameseModel(SIAMESE_MODEL_PATH, DEVICE)
 
 menu = [
     {"title": "Выход", "url_name": "logout"},
