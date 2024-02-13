@@ -767,38 +767,38 @@ def download_my_zip(request, event_id):
     result = UsersIdentificationphotos.objects.get(user_id=request.user.id) 
     profile_photo_1 = result.identification_photo_1 
     profile_photo_2 = result.identification_photo_2 
-     
+    
+    this_event_path_to_catalog = PathToEventsFiles.objects.get(id_of_event=event_id)
+    folder_path = os.path.join(BASE_DIR, f'media/{str(this_event_path_to_catalog.path_to_unarchive_file)}_cutted') 
+    
     target_image_paths = [ 
         os.path.join(BASE_DIR, f'media/{profile_photo_1}'), 
         os.path.join(BASE_DIR, f'media/{profile_photo_2}') 
     ] 
-     
-    folder_path = os.path.join(BASE_DIR, f'media/{str(this_event_path_to_catalog.path_to_unarchive_file)}_cutted') 
-     
+    
     all_similar_images = [] 
     for target_image_path in target_image_paths: 
         similar_images = compare_images(target_image_path, folder_path) 
         all_similar_images.extend(similar_images) 
-     
-    similar_images = list(set(all_similar_images)) 
-     
-    this_event_path_to_catalog = PathToEventsFiles.objects.get(id_of_event=event_id)
-    this_event_path_to_catalog_postfix = str(this_event_path_to_catalog.path_to_unarchive_file)[
-                                         str(this_event_path_to_catalog.path_to_unarchive_file).find('/') + 1:]
-    full_file_path = os.path.join(BASE_DIR, f'media/{str(this_event_path_to_catalog.path_to_unarchive_file)}')
-    full_save_file_path = os.path.join(BASE_DIR, f'media/archive_release_this_people/{str(this_event_path_to_catalog_postfix)}')
+    
+    all_similar_images = list(set(all_similar_images)) 
+    
+    this_event_postfix = str(this_event_path_to_catalog.path_to_unarchive_file)[str(this_event_path_to_catalog.path_to_unarchive_file).find('/') + 1:]
+    full_save_file_path = os.path.join(BASE_DIR, f'media/archive_release_this_people/{this_event_postfix}')
     path_to_archive = os.path.join(full_save_file_path, 'Archive_with_your_photos.zip')
-    os.makedirs(os.path.dirname(f'{full_save_file_path}/'), exist_ok=True)
-    file_zip = zipfile.ZipFile(path_to_archive, 'w')
-    local_path_to_archive = f'archive_release_this_people/{str(this_event_path_to_catalog_postfix)}/Archive_with_your_photos.zip'
+    os.makedirs(os.path.dirname(path_to_archive), exist_ok=True) 
     
-    try:
-        req = PathToArchiveReleaseOnePeoplePhotos.objects.get(event_id=event_id)
-    except:
-        PathToArchiveReleaseOnePeoplePhotos.objects.create(path_to_release_archive=local_path_to_archive, event_id=event_id, user_id=request.user.id)
-        req = PathToArchiveReleaseOnePeoplePhotos.objects.get(event_id=event_id)
+    with zipfile.ZipFile(path_to_archive, 'w') as file_zip: 
+        for elem in all_similar_images: 
+            file_zip.write(elem, os.path.relpath(elem, full_save_file_path), compress_type=zipfile.ZIP_DEFLATED) 
     
-    for elem in similar_images:
-        file_zip.write(elem, os.path.relpath(elem, full_save_file_path), compress_type=zipfile.ZIP_DEFLATED)
-
+    PathToArchiveReleaseOnePeoplePhotos.objects.update_or_create( 
+        path_to_release_archive='archive_release_this_people/' + os.path.basename(path_to_archive), 
+        event_id=event_id, 
+        user_id=request.user.id, 
+        defaults={'path_to_release_archive': 'archive_release_this_people/' + os.path.basename(path_to_archive)} 
+    ) 
+    
+    req = PathToArchiveReleaseOnePeoplePhotos.objects.get(event_id=event_id, user_id=request.user.id) 
+    
     return render(request, 'support/download_my.html', {'path_to_archive': req})
